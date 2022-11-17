@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:core';
 
 import 'package:quickblox_polls_feature/data/repository_exception.dart';
+import 'package:quickblox_polls_feature/models/create_poll.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 import 'package:quickblox_sdk/models/qb_filter.dart';
@@ -132,7 +133,7 @@ class ChatRepository {
   }
 
   Future<void> sendCreatePollMessage(String? dialogId,
-      {Map<String, String>? properties}) async {
+      {required PollActionCreate data}) async {
     if (dialogId == null) {
       throw RepositoryException(_parameterIsNullException,
           affectedParams: ["dialogId"]);
@@ -141,7 +142,21 @@ class ChatRepository {
       dialogId,
       saveToHistory: true,
       markable: true,
-      properties: properties,
+      properties: data.toJson(),
+    );
+  }
+
+  Future<void> sendVotePollMessage(String? dialogId,
+      {required PollActionVote data}) async {
+    if (dialogId == null) {
+      throw RepositoryException(_parameterIsNullException,
+          affectedParams: ["dialogId"]);
+    }
+    await QB.chat.sendMessage(
+      dialogId,
+      saveToHistory: true,
+      markable: true,
+      properties: data.toJson(),
     );
   }
 

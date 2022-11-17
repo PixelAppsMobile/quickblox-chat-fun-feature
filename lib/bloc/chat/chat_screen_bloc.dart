@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/services.dart';
+import 'package:quickblox_polls_feature/models/create_poll.dart';
+import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/mappers/qb_message_mapper.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
@@ -151,14 +153,10 @@ class ChatScreenBloc
       }
     }
     if (receivedEvent is CreatePollMessageEvent) {
-      if (receivedEvent.pollData == null) {
-        states?.add(SendMessageErrorState("Poll is Empty", null));
-        return;
-      }
       try {
         await _chatRepository.sendStoppedTyping(_dialogId);
         await Future.delayed(const Duration(milliseconds: 300), () async {
-          await _sendCreatePollMessage(properties: receivedEvent.pollData);
+          await _sendCreatePollMessage(data: receivedEvent.data);
         });
       } on PlatformException catch (e) {
         states?.add(
@@ -340,6 +338,36 @@ class ChatScreenBloc
     return list;
   }
 
+  void recalculatePolls() {
+    final votes = _wrappedMessageSet
+        .where((e) => e.qbMessage.properties?['action'] == 'pollActionVote');
+
+    ///Remove votes from messageSet
+
+    List<PollMessage> polls = [];
+    for (int i = 0; i < _wrappedMessageSet.length; i++) {
+      final message = _wrappedMessageSet.elementAt(i);
+
+      if (message.qbMessage.properties?['action'] == 'pollActionCreate') {
+        Map<String, String> pollVotes = {};
+        votes
+            .where((allVotes) =>
+                allVotes.qbMessage.properties?['pollId'] ==
+                (message.qbMessage.properties?['action']))
+            .map((vote) {
+          pollVotes[vote.qbMessage.senderId!.toString()] =
+              vote.qbMessage.properties!['chosenOption']!;
+        });
+        polls.add(PollMessage.fromQBMessageWrapper(message, votes: pollVotes));
+      }
+    }
+    _wrappedMessageSet.removeWhere((e) {
+      return e.qbMessage.properties?['action'] == 'pollActionVote' ||
+          e.qbMessage.properties?['action'] == 'pollActionCreate';
+    });
+    _wrappedMessageSet.addAll(polls);
+  }
+
   Future<void> _subscribeReadStatus() async {
     await _messageReadSubscription?.cancel();
     _messageReadSubscription = null;
@@ -426,6 +454,7 @@ class ChatScreenBloc
     if (dialogId == _dialogId) {
       QBMessage? message = QBMessageMapper.mapToQBMessage(payload);
       _wrappedMessageSet.addAll(await _wrapMessages([message]));
+      recalculatePolls();
       states
           ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
     }
@@ -586,10 +615,17 @@ class ChatScreenBloc
     );
   }
 
-  Future<void> _sendCreatePollMessage({Map<String, String>? properties}) async {
+  Future<void> _sendCreatePollMessage({required PollActionCreate data}) async {
     await _chatRepository.sendCreatePollMessage(
       _dialogId,
-      properties: properties,
+      data: data,
+    );
+  }
+
+  Future<void> _sendVotePollMessage({required PollActionVote data}) async {
+    await _chatRepository.sendVotePollMessage(
+      _dialogId,
+      data: data,
     );
   }
 

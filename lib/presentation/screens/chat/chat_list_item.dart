@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
 import '../../../base_bloc.dart';
@@ -59,9 +60,9 @@ class ChatListItemState extends State<ChatListItem> {
       );
     }
 
-    bool isPoll = (messageProperties != null &&
-        messageProperties.containsKey("pollData"));
+    bool isPoll = _message is PollMessage;
 
+    ///TODO: Handle Polls
     if (isPoll) {
       return Container(
         color: Colors.red,

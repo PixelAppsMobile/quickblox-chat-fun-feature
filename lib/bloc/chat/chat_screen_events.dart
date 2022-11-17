@@ -1,3 +1,4 @@
+import 'package:quickblox_polls_feature/models/create_poll.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 
 /// Created by Injoit in 2021.
@@ -28,9 +29,14 @@ class SendMessageEvent extends ChatScreenEvents {
 }
 
 class CreatePollMessageEvent extends ChatScreenEvents {
-  final Map<String, String>? pollData;
+  final PollActionCreate data;
 
-  CreatePollMessageEvent(this.pollData);
+  CreatePollMessageEvent(this.data);
+}
+
+class VoteToPollEvent extends ChatScreenEvents {
+  final PollActionVote data;
+  VoteToPollEvent(this.data);
 }
 
 class MarkMessageRead extends ChatScreenEvents {
