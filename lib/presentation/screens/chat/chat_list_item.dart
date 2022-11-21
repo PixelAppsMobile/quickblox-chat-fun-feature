@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
+import 'package:quickblox_polls_feature/presentation/screens/chat/polls.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
 import '../../../base_bloc.dart';
@@ -60,15 +63,19 @@ class ChatListItemState extends State<ChatListItem> {
       );
     }
 
-    bool isPoll = _message is PollMessage;
+    bool isPoll = _message.qbMessage.properties?.containsKey('pollId') ?? false;
+    final options = jsonDecode(_message.qbMessage.properties!['pollOptions']!) as Map<String,String>;
 
     ///TODO: Handle Polls
-    if (isPoll) {
-      return Container(
-        color: Colors.red,
-        child: const Text('This is a POLL message'),
-      );
-    }
+    // if (isPoll) {
+    //   return Container(
+    //     color: Colors.red,
+    //     child: Polls(
+    //       children: options.entries.map((e) => PollOption(option: e.key, value: e.value)).toList(),
+    //       question: Text(_message.qbMessage.properties!['pollOptions']!),
+    //     ),
+    //   );
+    // }
 
     return Container(
       padding: const EdgeInsets.only(left: 10, right: 12, bottom: 8),

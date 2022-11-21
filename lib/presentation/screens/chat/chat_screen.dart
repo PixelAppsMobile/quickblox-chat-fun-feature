@@ -11,6 +11,7 @@ import 'package:quickblox_sdk/chat/constants.dart';
 import '../../../bloc/chat/chat_screen_bloc.dart';
 import '../../../bloc/chat/chat_screen_events.dart';
 import '../../../bloc/chat/chat_screen_states.dart';
+import '../../../models/create_poll.dart';
 import '../../../models/message_wrapper.dart';
 import '../../../stream_builder_with_listener.dart';
 import '../../../utils/color_util.dart';
@@ -358,33 +359,46 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                             onPressed: () {
                                               Navigator.of(context).pop();
                                               TypingStatusManager.cancelTimer();
-                                              final uniquePollId = UniqueKey();
-                                              print('PollId: $uniquePollId');
-                                              Map<String, dynamic> data = {
-                                                "pollTitle": pollTitleController
-                                                    .text
-                                                    .trim(),
-                                                "pollOption1":
-                                                    pollOption1Controller.text
+                                              // final uniquePollId = UniqueKey();
+                                              // print('PollId: $uniquePollId');
+                                              // Map<String, dynamic> data = {
+                                              //   "pollTitle": pollTitleController
+                                              //       .text
+                                              //       .trim(),
+                                              //   "pollOption1":
+                                              //       pollOption1Controller.text
+                                              //           .trim(),
+                                              //   "pollOption2":
+                                              //       pollOption2Controller.text
+                                              //           .trim(),
+                                              //   "pollOption3":
+                                              //       pollOption3Controller.text
+                                              //           .trim(),
+                                              //   "pollOption4":
+                                              //       pollOption4Controller.text
+                                              //           .trim(),
+                                              // };
+                                              // final stringData =
+                                              //     jsonEncode(data);
+                                              // pollData['pollData'] = stringData;
+                                              bloc?.events?.add(
+                                                CreatePollMessageEvent(
+                                                  PollActionCreate.fromData(
+                                                    pollTitleController.text
                                                         .trim(),
-                                                "pollOption2":
-                                                    pollOption2Controller.text
-                                                        .trim(),
-                                                "pollOption3":
-                                                    pollOption3Controller.text
-                                                        .trim(),
-                                                "pollOption4":
-                                                    pollOption4Controller.text
-                                                        .trim(),
-                                              };
-                                              final stringData =
-                                                  jsonEncode(data);
-                                              pollData['pollData'] = stringData;
-                                              // bloc?.events?.add(
-                                              //   CreatePollMessageEvent(
-                                              //     pollData,
-                                              //   ),
-                                              // );
+                                                    [
+                                                      pollOption1Controller.text
+                                                          .trim(),
+                                                      pollOption2Controller.text
+                                                          .trim(),
+                                                      pollOption3Controller.text
+                                                          .trim(),
+                                                      pollOption4Controller.text
+                                                          .trim(),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
                                             },
                                             child: const Text('Create Poll'),
                                           ),
