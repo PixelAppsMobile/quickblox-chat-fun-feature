@@ -23,8 +23,6 @@ class ChatPollItem extends StatelessWidget {
     bool hasVoted = voters.contains(message.currentUserId);
 
     return Container(
-      // color: Colors.red,
-      // margin: EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.only(left: 10, right: 12, bottom: 8),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -148,8 +148,17 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                       state.messageActions.where((action) =>
                                           action is PollMessageVote &&
                                           action.pollID == message.pollID));
+                                  print(
+                                      "Poll ${message.pollTitle} ${pollVotes.length}");
                                   return ChatPollItem(
-                                      message: message, votes: pollVotes);
+                                    message: message,
+                                    votes: pollVotes,
+                                    key: ValueKey(
+                                      Key(
+                                        RandomUtil.getRandomString(10),
+                                      ),
+                                    ),
+                                  );
                                 }
                                 return GestureDetector(
                                     child: ChatListItem(
