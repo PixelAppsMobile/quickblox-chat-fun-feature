@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -11,6 +10,7 @@ import 'package:quickblox_sdk/chat/constants.dart';
 import '../../../bloc/chat/chat_screen_bloc.dart';
 import '../../../bloc/chat/chat_screen_events.dart';
 import '../../../bloc/chat/chat_screen_states.dart';
+import '../../../models/create_poll.dart';
 import '../../../models/message_wrapper.dart';
 import '../../../stream_builder_with_listener.dart';
 import '../../../utils/color_util.dart';
@@ -23,7 +23,7 @@ import '../base_screen_state.dart';
 import 'chat_list_item.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String _dialogId = '6371da0d07a49d006826d736';
+  final String _dialogId = '637b222132eaaf006da3343e';
   final bool _isNewChat = false;
 
   const ChatScreen({super.key});
@@ -97,11 +97,12 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                           },
                           builder: (_, state, __) {
                             if (state is LoadMessagesSuccessState) {
-                              this._hasMore = state.hasMore;
+                              _hasMore = state.hasMore;
                             }
                             var tapPosition;
 
                             return GroupedListView<QBMessageWrapper, DateTime>(
+                              addAutomaticKeepAlives: true,
                               elements:
                                   (state as LoadMessagesSuccessState).messages,
                               order: GroupedListOrder.DESC,
@@ -288,124 +289,110 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                   width: 50,
                   height: 50,
                   child: IconButton(
-                      icon: const Icon(
-                        Icons.poll,
-                        color: Colors.blue,
-                      ),
-                      onPressed: () {
-                        Map<String, String> pollData = {};
-                        final formKey = GlobalKey<FormState>();
+                    icon: const Icon(
+                      Icons.poll,
+                      color: Colors.blue,
+                    ),
+                    onPressed: () {
+                      final formKey = GlobalKey<FormState>();
+                      final pollTitleController = TextEditingController();
+                      final pollOption1Controller = TextEditingController();
+                      final pollOption2Controller = TextEditingController();
+                      final pollOption3Controller = TextEditingController();
+                      final pollOption4Controller = TextEditingController();
 
-                        final pollTitleController = TextEditingController();
-                        final pollOption1Controller = TextEditingController();
-                        final pollOption2Controller = TextEditingController();
-                        final pollOption3Controller = TextEditingController();
-                        final pollOption4Controller = TextEditingController();
-
-                        showModalBottomSheet(
-                            isScrollControlled: true,
-                            enableDrag: true,
-                            // constraints: const BoxConstraints(
-                            //   maxHeight: 500,
-                            // ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(25.0),
-                              ),
-                            ),
-                            context: context,
-                            builder: (context) {
-                              return Padding(
-                                padding: EdgeInsets.only(
-                                    bottom: MediaQuery.of(context)
-                                        .viewInsets
-                                        .bottom),
-                                child: Container(
-                                  // height: 500,
-                                  padding: const EdgeInsets.all(20.0),
-                                  color: Colors.white,
-                                  child: Form(
-                                    key: formKey,
-                                    child: SingleChildScrollView(
-                                      child: Column(
-                                        // mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          PollTextFieldRow(
-                                            label: 'Poll Title',
-                                            txtController: pollTitleController,
-                                          ),
-                                          PollTextFieldRow(
-                                            label: 'Poll Option 1',
-                                            txtController:
-                                                pollOption1Controller,
-                                          ),
-                                          PollTextFieldRow(
-                                            label: 'Poll Option 2',
-                                            txtController:
-                                                pollOption2Controller,
-                                          ),
-                                          PollTextFieldRow(
-                                            label: 'Poll Option 3',
-                                            txtController:
-                                                pollOption3Controller,
-                                          ),
-                                          PollTextFieldRow(
-                                            label: 'Poll Option 4',
-                                            txtController:
-                                                pollOption4Controller,
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              TypingStatusManager.cancelTimer();
-                                              final uniquePollId = UniqueKey();
-                                              print('PollId: $uniquePollId');
-                                              Map<String, dynamic> data = {
-                                                "pollTitle": pollTitleController
-                                                    .text
-                                                    .trim(),
-                                                "pollOption1":
-                                                    pollOption1Controller.text
-                                                        .trim(),
-                                                "pollOption2":
-                                                    pollOption2Controller.text
-                                                        .trim(),
-                                                "pollOption3":
-                                                    pollOption3Controller.text
-                                                        .trim(),
-                                                "pollOption4":
-                                                    pollOption4Controller.text
-                                                        .trim(),
-                                              };
-                                              final stringData =
-                                                  jsonEncode(data);
-                                              pollData['pollData'] = stringData;
-                                              // bloc?.events?.add(
-                                              //   CreatePollMessageEvent(
-                                              //     pollData,
-                                              //   ),
-                                              // );
-                                            },
-                                            child: const Text('Create Poll'),
-                                          ),
-                                        ],
+                      showModalBottomSheet(
+                        isScrollControlled: true,
+                        enableDrag: true,
+                        // constraints: const BoxConstraints(
+                        //   maxHeight: 500,
+                        // ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(25.0),
+                          ),
+                        ),
+                        context: context,
+                        builder: (context) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom),
+                            child: Container(
+                              // height: 500,
+                              padding: const EdgeInsets.all(20.0),
+                              color: Colors.white,
+                              child: Form(
+                                key: formKey,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    // mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      PollTextFieldRow(
+                                        label: 'Poll Title',
+                                        txtController: pollTitleController,
                                       ),
-                                    ),
+                                      PollTextFieldRow(
+                                        label: 'Poll Option 1',
+                                        txtController: pollOption1Controller,
+                                      ),
+                                      PollTextFieldRow(
+                                        label: 'Poll Option 2',
+                                        txtController: pollOption2Controller,
+                                      ),
+                                      PollTextFieldRow(
+                                        label: 'Poll Option 3',
+                                        txtController: pollOption3Controller,
+                                      ),
+                                      PollTextFieldRow(
+                                        label: 'Poll Option 4',
+                                        txtController: pollOption4Controller,
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          TypingStatusManager.cancelTimer();
+                                          bloc?.events?.add(
+                                            CreatePollMessageEvent(
+                                              PollActionCreate.fromData(
+                                                pollTitleController.text.trim(),
+                                                [
+                                                  pollOption1Controller.text
+                                                      .trim(),
+                                                  pollOption2Controller.text
+                                                      .trim(),
+                                                  pollOption3Controller.text
+                                                      .trim(),
+                                                  pollOption4Controller.text
+                                                      .trim(),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Create Poll'),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            });
-                      }),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
                 SizedBox(
                   width: 50,
                   height: 50,
                   child: IconButton(
-                      icon: SvgPicture.asset('assets/icons/attachment.svg'),
-                      onPressed: () {
-                        NotificationBarUtils.showSnackBarError(
-                            context, "This feature is not available now");
-                      }),
+                    icon: SvgPicture.asset('assets/icons/attachment.svg'),
+                    onPressed: () {
+                      NotificationBarUtils.showSnackBarError(
+                          context, "This feature is not available now");
+                    },
+                  ),
                 ),
                 Expanded(
                   child: Container(
@@ -413,32 +400,41 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                     child: TextField(
                       controller: _inputController,
                       onChanged: (text) {
-                        TypingStatusManager.typing((TypingStates state) {
-                          switch (state) {
-                            case TypingStates.start:
-                              bloc?.events?.add(StartTypingEvent());
-                              break;
-                            case TypingStates.stop:
-                              bloc?.events?.add(StopTypingEvent());
-                              break;
-                          }
-                        });
+                        TypingStatusManager.typing(
+                          (TypingStates state) {
+                            switch (state) {
+                              case TypingStates.start:
+                                bloc?.events?.add(StartTypingEvent());
+                                break;
+                              case TypingStates.stop:
+                                bloc?.events?.add(StopTypingEvent());
+                                break;
+                            }
+                          },
+                        );
                       },
                       keyboardType: TextInputType.multiline,
                       minLines: 1,
                       maxLines: 4,
                       style: const TextStyle(
-                          fontSize: 15.0, color: Colors.black87),
+                        fontSize: 15.0,
+                        color: Colors.black87,
+                      ),
                       decoration: const InputDecoration(
-                          focusedBorder: UnderlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.transparent)),
-                          hintStyle: TextStyle(color: Colors.black26),
-                          hintText: "Send message..."),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.transparent,
+                          ),
+                        ),
+                        hintStyle: TextStyle(
+                          color: Colors.black26,
+                        ),
+                        hintText: "Send message...",
+                      ),
                     ),
                   ),
                 ),
-                Container(
+                SizedBox(
                   width: 50,
                   height: 50,
                   child: IconButton(
@@ -476,20 +472,21 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
               color: const Color(0xfff1f1f1),
               height: 35,
               child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(width: 16),
-                    Text(
-                      _makeTypingStatus(state.typingNames),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xff6c7a92),
-                        fontStyle: FontStyle.italic,
-                      ),
-                    )
-                  ]),
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 16),
+                  Text(
+                    _makeTypingStatus(state.typingNames),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xff6c7a92),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  )
+                ],
+              ),
             );
           } else {
             return const SizedBox.shrink();
@@ -633,21 +630,36 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
               case QBChatDialogTypes.GROUP_CHAT:
                 menuItems = [
                   const PopupMenuItem(
-                      child: Text("Chat Info",
-                          style: TextStyle(color: Colors.black54)),
-                      value: CHAT_INFO_MENU_ITEM),
+                    value: CHAT_INFO_MENU_ITEM,
+                    child: Text(
+                      "Chat Info",
+                      style: TextStyle(
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
                   const PopupMenuItem(
-                      child: Text("Leave Chat",
-                          style: TextStyle(color: Colors.black54)),
-                      value: LEAVE_CHAT_MENU_ITEM)
+                    value: LEAVE_CHAT_MENU_ITEM,
+                    child: Text(
+                      "Leave Chat",
+                      style: TextStyle(
+                        color: Colors.black54,
+                      ),
+                    ),
+                  )
                 ];
                 break;
               case QBChatDialogTypes.CHAT:
                 menuItems = [
                   const PopupMenuItem(
-                      child: Text("Delete Chat",
-                          style: TextStyle(color: Colors.black54)),
-                      value: DELETE_CHAT_MENU_ITEM)
+                    value: DELETE_CHAT_MENU_ITEM,
+                    child: Text(
+                      "Delete Chat",
+                      style: TextStyle(
+                        color: Colors.black54,
+                      ),
+                    ),
+                  )
                 ];
                 break;
               default:
@@ -656,7 +668,10 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
             Widget popupMenu = PopupMenuButton(
                 color: Colors.white,
                 shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15.0))),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(15.0),
+                  ),
+                ),
                 onSelected: (item) {
                   switch (item) {
                     case CHAT_INFO_MENU_ITEM:

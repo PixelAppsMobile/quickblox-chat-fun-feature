@@ -35,7 +35,7 @@ class ChatArguments extends Object {
 class ChatScreenBloc
     extends Bloc<ChatScreenEvents, ChatScreenStates, ChatArguments>
     with ConnectionListener {
-  static const int PAGE_SIZE = 20;
+  static const int PAGE_SIZE = 40;
   static const int TEXT_MESSAGE_MAX_SIZE = 1000;
 
   final ChatRepository _chatRepository = ChatRepository();
@@ -112,6 +112,8 @@ class ChatScreenBloc
         _wrappedMessageSet.clear();
         await _updateDialog();
         await _loadMessages();
+        // recalculatePolls();
+
       } on PlatformException catch (e) {
         states?.add(UpdateChatErrorState(makeErrorMessage(e)));
       }
@@ -169,6 +171,25 @@ class ChatScreenBloc
         states?.add(SendMessageErrorState(e.message, 'Can\'t create poll'));
       }
     }
+    if (receivedEvent is VoteToPollEvent) {
+      try {
+        await _chatRepository.sendStoppedTyping(_dialogId);
+        await Future.delayed(const Duration(milliseconds: 300), () async {
+          await _sendVotePollMessage(data: receivedEvent.data);
+          // recalculatePolls();
+        });
+      } on PlatformException catch (e) {
+        states?.add(
+          SendMessageErrorState(
+            makeErrorMessage(e),
+            'Can\'t vote poll',
+          ),
+        );
+      } on RepositoryException catch (e) {
+        states?.add(SendMessageErrorState(e.message, 'Can\'t vote poll'));
+      }
+    }
+
     if (receivedEvent is MarkMessageRead) {
       _chatRepository.markMessageRead(receivedEvent.message);
     }
@@ -340,7 +361,8 @@ class ChatScreenBloc
 
   void recalculatePolls() {
     final votes = _wrappedMessageSet
-        .where((e) => e.qbMessage.properties?['action'] == 'pollActionVote');
+        .where((e) => e.qbMessage.properties?['action'] == 'pollActionVote')
+        .toList();
 
     ///Remove votes from messageSet
 
@@ -348,16 +370,31 @@ class ChatScreenBloc
     for (int i = 0; i < _wrappedMessageSet.length; i++) {
       final message = _wrappedMessageSet.elementAt(i);
 
+      // if (message is PollMessage) {
+      //   Map<String, String> pollVotes = message.votes;
+      //   votes
+      //       .where((allVotes) =>
+      //           allVotes.qbMessage.properties?['pollId'] ==
+      //           (message.qbMessage.properties?['pollId']))
+      //       .map((vote) {
+      //     pollVotes[vote.qbMessage.senderId!.toString()] =
+      //         vote.qbMessage.properties!['chosenOption']!;
+      //   }).toList();
+      //   polls.add(PollMessage.fromQBMessageWrapper(message, votes: pollVotes));
+      //   continue;
+      // }
+
       if (message.qbMessage.properties?['action'] == 'pollActionCreate') {
-        Map<String, String> pollVotes = {};
+        Map<String, String> pollVotes =
+            message is PollMessage ? message.votes : {};
         votes
             .where((allVotes) =>
                 allVotes.qbMessage.properties?['pollId'] ==
-                (message.qbMessage.properties?['action']))
+                (message.qbMessage.properties?['pollId']))
             .map((vote) {
           pollVotes[vote.qbMessage.senderId!.toString()] =
               vote.qbMessage.properties!['chosenOption']!;
-        });
+        }).toList();
         polls.add(PollMessage.fromQBMessageWrapper(message, votes: pollVotes));
       }
     }
@@ -558,8 +595,11 @@ class ChatScreenBloc
     states?.add(LoadMessagesInProgressState());
     List<QBMessage?>? messages;
     try {
-      messages = await _chatRepository.getDialogMessagesByDateSent(_dialogId,
-          limit: PAGE_SIZE, skip: skip);
+      messages = await _chatRepository.getDialogMessagesByDateSent(
+        _dialogId,
+        limit: PAGE_SIZE,
+        skip: skip,
+      );
     } on PlatformException catch (e) {
       states?.add(UpdateChatErrorState(makeErrorMessage(e)));
     } on RepositoryException catch (e) {
@@ -576,6 +616,7 @@ class ChatScreenBloc
       if (skip == 0) {
         await _subscribeEvents();
       }
+      recalculatePolls();
 
       states?.add(
           LoadMessagesSuccessState(_getMessageListSortedByDate(), hasMore));
@@ -583,7 +624,7 @@ class ChatScreenBloc
   }
 
   void _loadUsers(List<QBMessage?> messages) async {
-    if (messages.length == 0) {
+    if (messages.isEmpty) {
       return;
     }
 
