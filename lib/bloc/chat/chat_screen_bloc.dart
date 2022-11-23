@@ -595,8 +595,11 @@ class ChatScreenBloc
     states?.add(LoadMessagesInProgressState());
     List<QBMessage?>? messages;
     try {
-      messages = await _chatRepository.getDialogMessagesByDateSent(_dialogId,
-          skip: skip);
+      messages = await _chatRepository.getDialogMessagesByDateSent(
+        _dialogId,
+        limit: PAGE_SIZE,
+        skip: skip,
+      );
     } on PlatformException catch (e) {
       states?.add(UpdateChatErrorState(makeErrorMessage(e)));
     } on RepositoryException catch (e) {
