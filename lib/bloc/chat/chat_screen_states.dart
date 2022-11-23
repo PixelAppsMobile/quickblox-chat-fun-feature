@@ -36,9 +36,10 @@ class LoadMessagesInProgressState extends ChatScreenStates {}
 
 class LoadMessagesSuccessState extends ChatScreenStates {
   final List<QBMessageWrapper> messages;
+  final List<QBMessageWrapper> messageActions;
   final bool hasMore;
 
-  LoadMessagesSuccessState(this.messages, this.hasMore);
+  LoadMessagesSuccessState(this.messages, this.messageActions, this.hasMore);
 }
 
 class LoadNextMessagesErrorState extends ChatScreenStates {

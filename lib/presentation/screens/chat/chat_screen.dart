@@ -5,6 +5,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:quickblox_polls_feature/models/poll_message.dart';
+import 'package:quickblox_polls_feature/presentation/screens/chat/chate_poll_item.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
 import '../../../bloc/chat/chat_screen_bloc.dart';
@@ -89,7 +91,7 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                     child: StreamProvider<ChatScreenStates>(
                       create: (context) =>
                           bloc?.states?.stream as Stream<ChatScreenStates>,
-                      initialData: LoadMessagesSuccessState([], false),
+                      initialData: LoadMessagesSuccessState([], [], false),
                       child: Selector<ChatScreenStates, ChatScreenStates>(
                           selector: (_, state) => state,
                           shouldRebuild: (previous, next) {
@@ -140,96 +142,104 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                               fontSize: 13)),
                                     )
                                   ]),
-                              itemBuilder: (context,
-                                      QBMessageWrapper message) =>
-                                  GestureDetector(
-                                      child: ChatListItem(
-                                          Key(
-                                            RandomUtil.getRandomString(10),
-                                          ),
-                                          message,
-                                          _dialogType),
-                                      onTapDown: (details) {
-                                        tapPosition = details.globalPosition;
-                                      },
-                                      onLongPress: () {
-                                        RenderBox? overlay = Overlay.of(context)
-                                            ?.context
-                                            .findRenderObject() as RenderBox;
+                              itemBuilder: (context, QBMessageWrapper message) {
+                                if (message is PollMessageCreate) {
+                                  final pollVotes = List<PollMessageVote>.from(
+                                      state.messageActions.where((action) =>
+                                          action is PollMessageVote &&
+                                          action.pollID == message.pollID));
+                                  return ChatPollItem(
+                                      message: message, votes: pollVotes);
+                                }
+                                return GestureDetector(
+                                    child: ChatListItem(
+                                        Key(
+                                          RandomUtil.getRandomString(10),
+                                        ),
+                                        message,
+                                        _dialogType),
+                                    onTapDown: (details) {
+                                      tapPosition = details.globalPosition;
+                                    },
+                                    onLongPress: () {
+                                      RenderBox? overlay = Overlay.of(context)
+                                          ?.context
+                                          .findRenderObject() as RenderBox;
 
-                                        List<PopupMenuItem> messageMenuItems = [
-                                          const PopupMenuItem(
-                                            value: FORWARD_MESSAGE_MENU_ITEM,
-                                            child: Text(
-                                              "Forward",
-                                              style: TextStyle(
-                                                color: Colors.black54,
-                                              ),
+                                      List<PopupMenuItem> messageMenuItems = [
+                                        const PopupMenuItem(
+                                          value: FORWARD_MESSAGE_MENU_ITEM,
+                                          child: Text(
+                                            "Forward",
+                                            style: TextStyle(
+                                              color: Colors.black54,
                                             ),
                                           ),
-                                        ];
+                                        ),
+                                      ];
 
-                                        List<PopupMenuItem>
-                                            ownMessageMenuItems = [
-                                          const PopupMenuItem(
-                                            value: DELIVERED_TO_MENU_ITEM,
-                                            child: Text(
-                                              "Delivered to",
-                                              style: TextStyle(
-                                                color: Colors.black54,
-                                              ),
+                                      List<PopupMenuItem> ownMessageMenuItems =
+                                          [
+                                        const PopupMenuItem(
+                                          value: DELIVERED_TO_MENU_ITEM,
+                                          child: Text(
+                                            "Delivered to",
+                                            style: TextStyle(
+                                              color: Colors.black54,
                                             ),
                                           ),
-                                          const PopupMenuItem(
-                                            value: VIEWED_BY_MENU_ITEM,
-                                            child: Text(
-                                              "Viewed by",
-                                              style: TextStyle(
-                                                color: Colors.black54,
-                                              ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: VIEWED_BY_MENU_ITEM,
+                                          child: Text(
+                                            "Viewed by",
+                                            style: TextStyle(
+                                              color: Colors.black54,
                                             ),
                                           ),
-                                        ];
+                                        ),
+                                      ];
 
-                                        if (!message.isIncoming) {
-                                          messageMenuItems
-                                              .addAll(ownMessageMenuItems);
+                                      if (!message.isIncoming) {
+                                        messageMenuItems
+                                            .addAll(ownMessageMenuItems);
+                                      }
+                                      showMenu(
+                                              context: context,
+                                              shape:
+                                                  const RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  15.0))),
+                                              color: Colors.white,
+                                              position: RelativeRect.fromRect(
+                                                  tapPosition &
+                                                      const Size(40, 40),
+                                                  Offset.zero & overlay.size),
+                                              elevation: 8,
+                                              items: messageMenuItems)
+                                          .then((value) {
+                                        switch (value) {
+                                          case FORWARD_MESSAGE_MENU_ITEM:
+                                            forwardMessage();
+                                            break;
+                                          case DELIVERED_TO_MENU_ITEM:
+                                            showMessageDetailsScreen(
+                                              message,
+                                              isDeliveredTo: true,
+                                            );
+                                            break;
+                                          case VIEWED_BY_MENU_ITEM:
+                                            showMessageDetailsScreen(
+                                              message,
+                                              isDeliveredTo: false,
+                                            );
+                                            break;
                                         }
-                                        showMenu(
-                                                context: context,
-                                                shape:
-                                                    const RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.all(
-                                                                Radius.circular(
-                                                                    15.0))),
-                                                color: Colors.white,
-                                                position: RelativeRect.fromRect(
-                                                    tapPosition &
-                                                        const Size(40, 40),
-                                                    Offset.zero & overlay.size),
-                                                elevation: 8,
-                                                items: messageMenuItems)
-                                            .then((value) {
-                                          switch (value) {
-                                            case FORWARD_MESSAGE_MENU_ITEM:
-                                              forwardMessage();
-                                              break;
-                                            case DELIVERED_TO_MENU_ITEM:
-                                              showMessageDetailsScreen(
-                                                message,
-                                                isDeliveredTo: true,
-                                              );
-                                              break;
-                                            case VIEWED_BY_MENU_ITEM:
-                                              showMessageDetailsScreen(
-                                                message,
-                                                isDeliveredTo: false,
-                                              );
-                                              break;
-                                          }
-                                        });
-                                      }),
+                                      });
+                                    });
+                              },
                               controller: _scrollController,
                             );
                           }),

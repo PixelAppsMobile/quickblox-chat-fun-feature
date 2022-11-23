@@ -50,6 +50,7 @@ class ChatScreenBloc
   TypingStatusTimer? _typingStatusTimer = TypingStatusTimer();
   final _participantsMap = HashMap<int, QBUser>();
   final _wrappedMessageSet = HashSet<QBMessageWrapper>();
+  final _wrappedMessageActions = <QBMessageWrapper>[];
   final _typingUsersNames = <String>[];
 
   StreamSubscription? _incomingMessagesSubscription;
@@ -359,52 +360,6 @@ class ChatScreenBloc
     return list;
   }
 
-  void recalculatePolls() {
-    final votes = _wrappedMessageSet
-        .where((e) => e.qbMessage.properties?['action'] == 'pollActionVote')
-        .toList();
-
-    ///Remove votes from messageSet
-
-    List<PollMessage> polls = [];
-    for (int i = 0; i < _wrappedMessageSet.length; i++) {
-      final message = _wrappedMessageSet.elementAt(i);
-
-      // if (message is PollMessage) {
-      //   Map<String, String> pollVotes = message.votes;
-      //   votes
-      //       .where((allVotes) =>
-      //           allVotes.qbMessage.properties?['pollId'] ==
-      //           (message.qbMessage.properties?['pollId']))
-      //       .map((vote) {
-      //     pollVotes[vote.qbMessage.senderId!.toString()] =
-      //         vote.qbMessage.properties!['chosenOption']!;
-      //   }).toList();
-      //   polls.add(PollMessage.fromQBMessageWrapper(message, votes: pollVotes));
-      //   continue;
-      // }
-
-      if (message.qbMessage.properties?['action'] == 'pollActionCreate') {
-        Map<String, String> pollVotes =
-            message is PollMessage ? message.votes : {};
-        votes
-            .where((allVotes) =>
-                allVotes.qbMessage.properties?['pollId'] ==
-                (message.qbMessage.properties?['pollId']))
-            .map((vote) {
-          pollVotes[vote.qbMessage.senderId!.toString()] =
-              vote.qbMessage.properties!['chosenOption']!;
-        }).toList();
-        polls.add(PollMessage.fromQBMessageWrapper(message, votes: pollVotes));
-      }
-    }
-    _wrappedMessageSet.removeWhere((e) {
-      return e.qbMessage.properties?['action'] == 'pollActionVote' ||
-          e.qbMessage.properties?['action'] == 'pollActionCreate';
-    });
-    _wrappedMessageSet.addAll(polls);
-  }
-
   Future<void> _subscribeReadStatus() async {
     await _messageReadSubscription?.cancel();
     _messageReadSubscription = null;
@@ -433,8 +388,8 @@ class ChatScreenBloc
           break;
         }
       }
-      states
-          ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
+      states?.add(LoadMessagesSuccessState(
+          _getMessageListSortedByDate(), _wrappedMessageActions, true));
     }
   }
 
@@ -466,8 +421,8 @@ class ChatScreenBloc
           break;
         }
       }
-      states
-          ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
+      states?.add(LoadMessagesSuccessState(
+          _getMessageListSortedByDate(), _wrappedMessageActions, true));
     }
   }
 
@@ -491,9 +446,9 @@ class ChatScreenBloc
     if (dialogId == _dialogId) {
       QBMessage? message = QBMessageMapper.mapToQBMessage(payload);
       _wrappedMessageSet.addAll(await _wrapMessages([message]));
-      recalculatePolls();
-      states
-          ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
+
+      states?.add(LoadMessagesSuccessState(
+          _getMessageListSortedByDate(), _wrappedMessageActions, true));
     }
   }
 
@@ -616,10 +571,9 @@ class ChatScreenBloc
       if (skip == 0) {
         await _subscribeEvents();
       }
-      recalculatePolls();
 
-      states?.add(
-          LoadMessagesSuccessState(_getMessageListSortedByDate(), hasMore));
+      states?.add(LoadMessagesSuccessState(
+          _getMessageListSortedByDate(), _wrappedMessageActions, hasMore));
     }
   }
 
@@ -688,7 +642,19 @@ class ChatScreenBloc
         }
       }
       String senderName = sender?.fullName ?? sender?.login ?? "DELETED User";
-      wrappedMessages.add(QBMessageWrapper(senderName, message, _localUserId!));
+
+      //Message Actions
+      if (message.properties?['action'] == 'pollActionVote') {
+        _wrappedMessageActions
+            .add(PollMessageVote(senderName, message, _localUserId!));
+        //Displayed Messages
+      } else if (message.properties?['action'] == 'pollActionCreate') {
+        wrappedMessages
+            .add(PollMessageCreate(senderName, message, _localUserId!));
+      } else {
+        wrappedMessages
+            .add(QBMessageWrapper(senderName, message, _localUserId!));
+      }
     }
     return wrappedMessages;
   }

@@ -2,30 +2,23 @@ import 'dart:convert';
 
 import 'package:quickblox_polls_feature/models/message_wrapper.dart';
 
-class PollMessage extends QBMessageWrapper {
-  PollMessage(super.senderName, super.message, super.currentUserId,
-      {this.votes = const {}})
-      : pollId = message.properties!['pollId'],
-        pollTitle = message.properties!['pollTitle'],
-        pollOptions = message.properties?['pollOptions'] != null
-            ? jsonDecode(
-                message.properties!['pollOptions']!,
-              )
-            : <String, String>{};
-  final String? pollId;
-  final String? pollTitle;
-  final Map<String, dynamic>? pollOptions;
+class PollMessageCreate extends QBMessageWrapper {
+  PollMessageCreate(super.senderName, super.message, super.currentUserId)
+      : assert(message.properties?['action'] == 'pollActionCreate',
+            "The object is not a [PollMessageCreate]");
 
-  ///<voterID, optionId>
-  final Map<String, String> votes;
+  String get pollID => qbMessage.properties!['pollId']!;
+  String get pollTitle => qbMessage.properties!['pollTitle']!;
+  Map<String, String> get options =>
+      Map.from(jsonDecode(qbMessage.properties!['pollOptions']!));
+}
 
-  factory PollMessage.fromQBMessageWrapper(QBMessageWrapper message,
-      {Map<String, String> votes = const {}}) {
-    return PollMessage(
-      message.senderName!,
-      message.qbMessage,
-      message.currentUserId,
-      votes: votes,
-    );
-  }
+class PollMessageVote extends QBMessageWrapper {
+  PollMessageVote(super.senderName, super.message, super.currentUserId)
+      : assert(message.properties?['action'] == 'pollActionVote',
+            "The object is not a [PollMessageVote]");
+
+  String get pollID => qbMessage.properties!['pollId']!;
+  String get choosenOption => qbMessage.properties!['chosenOption']!;
+  int? get senderID => qbMessage.senderId;
 }
