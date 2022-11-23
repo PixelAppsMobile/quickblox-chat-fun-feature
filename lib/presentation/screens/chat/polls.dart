@@ -2,29 +2,32 @@ import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
 class Polls extends StatefulWidget {
-  Polls(
-      {required this.children,
-      required this.question,
-      this.hasVoted,
-      this.userId,
-      this.controller,
-      this.onVote,
-      this.outlineColor = Colors.blue,
-      this.backgroundColor = Colors.blueGrey,
-      this.onVoteBackgroundColor = Colors.blue,
-      this.leadingPollStyle,
-      this.pollStyle,
-      this.iconColor = Colors.black,
-      this.leadingBackgroundColor = Colors.blueGrey,
-      this.getHighest,
-      this.barRadius = 10,
-      this.userChoiceIcon,
-      this.showLogger = true,
-      Key? key})
-      : super(key: key);
+  Polls({
+    required this.children,
+    required this.question,
+    this.hasVoted,
+    this.userId,
+    this.controller,
+    this.onVote,
+    this.outlineColor = Colors.blue,
+    this.backgroundColor = Colors.blueGrey,
+    this.onVoteBackgroundColor = Colors.blue,
+    this.leadingPollStyle,
+    this.pollStyle,
+    this.iconColor = Colors.black,
+    this.leadingBackgroundColor = Colors.blueGrey,
+    this.getHighest,
+    this.barRadius = 10,
+    this.userChoiceIcon,
+    this.showLogger = true,
+    this.totalVotes = 0,
+    Key? key,
+  }) : super(key: key);
 
   final String? userId;
   final double barRadius;
+
+  final int totalVotes;
 
   final Text question;
   final Widget? userChoiceIcon;
@@ -82,7 +85,7 @@ class _PollsState extends State<Polls> {
     super.initState();
 
     _controller = widget.controller;
-    if (_controller == null) _controller = PollController();
+    _controller ??= PollController();
     _controller!.children = widget.children;
     hasVoted = widget.hasVoted ?? _controller!.hasVoted;
 
@@ -108,10 +111,10 @@ class _PollsState extends State<Polls> {
     valueList.clear();
 
     /// if polls style is null, it sets default pollstyle and leading pollstyle
-    this.pollStyle = widget.pollStyle ??
-        TextStyle(color: Colors.black, fontWeight: FontWeight.w300);
-    this.leadingPollStyle = widget.leadingPollStyle ??
-        TextStyle(color: Colors.black, fontWeight: FontWeight.w800);
+    pollStyle = widget.pollStyle ??
+        const TextStyle(color: Colors.black, fontWeight: FontWeight.w300);
+    leadingPollStyle = widget.leadingPollStyle ??
+        const TextStyle(color: Colors.black, fontWeight: FontWeight.w800);
 
     widget.children.map((e) {
       choiceList.add(e.option);
@@ -139,7 +142,7 @@ class _PollsState extends State<Polls> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         widget.question,
-        SizedBox(
+        const SizedBox(
           height: 12,
         ),
         Column(
@@ -147,38 +150,45 @@ class _PollsState extends State<Polls> {
             int index = widget.children.indexOf(element);
             return Container(
               width: double.infinity,
-              padding: EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Container(
-                margin: EdgeInsets.all(0),
-                width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.all(0),
-                height: 38,
+                margin: const EdgeInsets.all(0),
+                width: MediaQuery.of(context).size.width / 1.5,
+                padding: const EdgeInsets.all(0),
+                // height: 38,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(22),
                   color: widget.backgroundColor,
                 ),
                 child: OutlinedButton(
                   onPressed: () {
-                    setState(() {
-                      _userPollChoice = index;
-                    });
-                    _controller!.updatePollOption(index);
-                    double total = PollMethods.getTotalVotes(valueList);
-                    print('here');
-                    print(widget.children);
-                    widget.onVote!(widget.children[index], index + 1, total);
+                    // setState(() {
+                    //   _userPollChoice = index;
+                    // });
+                    // _controller!.updatePollOption(index);
+                    // double total = PollMethods.getTotalVotes(valueList);
+                    // print('here');
+                    // print(widget.children);
+                    widget.onVote!(
+                      widget.children[index],
+                      index,
+                    );
                   },
                   style: OutlinedButton.styleFrom(
-                    primary: widget.outlineColor,
-                    padding: EdgeInsets.all(5.0),
+                    foregroundColor: widget.outlineColor,
+                    padding: const EdgeInsets.all(5.0),
                     side: BorderSide(
                       color: widget.outlineColor,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: new BorderRadius.circular(widget.barRadius),
+                      borderRadius: BorderRadius.circular(widget.barRadius),
                     ),
                   ),
-                  child: Text(element.option, style: widget.pollStyle),
+                  child: Text(
+                    element.option,
+                    style: widget.pollStyle,
+                    maxLines: 2,
+                  ),
                 ),
               ),
             );
@@ -208,21 +218,21 @@ class _PollsState extends State<Polls> {
       }
     }
 
-    this.highest = current;
-    widget.getHighest!(highest.toStringAsFixed(1));
+    // highest = current;
+    // widget.getHighest!(highest.toStringAsFixed(1));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         widget.question,
-        SizedBox(
+        const SizedBox(
           height: 12,
         ),
         Column(
           children: widget.children.map((element) {
             int index = widget.children.indexOf(element);
             return Container(
-              margin: EdgeInsets.symmetric(vertical: 5),
+              margin: const EdgeInsets.symmetric(vertical: 5),
               width: double.infinity,
               child: LinearPercentIndicator(
                 padding: EdgeInsets.zero,
@@ -242,14 +252,14 @@ class _PollsState extends State<Polls> {
                               style: highest == valueList[index]
                                   ? widget.leadingPollStyle
                                   : widget.pollStyle),
-                          SizedBox(
+                          const SizedBox(
                             width: 10,
                           ),
                           userChoice(
                               _userPollChoice,
                               index + 1,
                               widget.userChoiceIcon ??
-                                  Icon(
+                                  const Icon(
                                     Icons.check_circle_outline,
                                     color: Colors.white,
                                     size: 17,
@@ -257,10 +267,7 @@ class _PollsState extends State<Polls> {
                         ],
                       ),
                       Text(
-                          PollMethods.getViewPercentage(
-                                      valueList, index + 1, 100)
-                                  .toStringAsFixed(1) +
-                              "%",
+                          "${PollMethods.getViewPercentage(valueList, index + 1, 100).toStringAsFixed(1)}%",
                           style: highest == valueList[index]
                               ? widget.leadingPollStyle
                               : widget.pollStyle)
@@ -268,7 +275,7 @@ class _PollsState extends State<Polls> {
                   ),
                 ),
                 barRadius: Radius.circular(widget.barRadius),
-                progressColor: this.highest == valueList[index]
+                progressColor: highest == valueList[index]
                     ? widget.leadingBackgroundColor
                     : widget.onVoteBackgroundColor,
               ),
@@ -306,20 +313,25 @@ class PollMethods {
     return div;
   }
 
-  static getTotalVotes(List<double> valueList) {
-    double sum = 0.0;
+  // static getTotalVotes(List<double> valueList) {
+  //   double sum = 0.0;
 
-    sum = valueList.map((value) => value).fold(0, (a, b) => a + b);
+  //   sum = valueList.map((value) => value).fold(0, (a, b) => a + b);
 
-    return sum;
-  }
+  //   return sum;
+  // }
 }
 
 class PollOption {
+  String? optionId;
   String option;
   double value;
 
-  PollOption({required this.option, required this.value});
+  PollOption({
+    this.optionId,
+    required this.option,
+    required this.value,
+  });
 }
 
 class PollController extends ChangeNotifier {
@@ -342,14 +354,16 @@ class PollController extends ChangeNotifier {
   }
 }
 
-enum PollType {
-  creator,
-  voter,
-  readOnly,
-}
+// enum PollType {
+//   creator,
+//   voter,
+//   readOnly,
+// }
 
 typedef PollOnVote = void Function(
-    PollOption pollOption, int optionIndex, double totalVotes);
+  PollOption pollOption,
+  int optionIndex,
+);
 
 typedef PollHighest = void Function(String total);
 
@@ -476,10 +490,10 @@ class LinearPercentIndicator extends StatefulWidget {
       throw ArgumentError(
           'Cannot provide both linearGradientBackgroundColor and backgroundColor');
     }
-    _backgroundColor = backgroundColor ?? Color(0xFFB8C7CB);
+    _backgroundColor = backgroundColor ?? const Color(0xFFB8C7CB);
 
     if (percent < 0.0 || percent > 1.0) {
-      throw new Exception(
+      throw Exception(
           "Percent value must be a double between 0.0 and 1.0, but it's $percent");
     }
   }
@@ -667,8 +681,8 @@ class _LinearPercentIndicatorState extends State<LinearPercentIndicator>
 }
 
 class _LinearPainter extends CustomPainter {
-  final Paint _paintBackground = new Paint();
-  final Paint _paintLine = new Paint();
+  final Paint _paintBackground = Paint();
+  final Paint _paintLine = Paint();
   final double progress;
   final bool isRTL;
   final Color progressColor;
