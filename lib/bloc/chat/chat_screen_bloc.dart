@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/services.dart';
-import 'package:quickblox_polls_feature/models/create_poll.dart';
+import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/mappers/qb_message_mapper.dart';
@@ -47,7 +47,7 @@ class ChatScreenBloc
   String? _dialogId;
   QBDialog? _dialog;
   bool _isNewChat = false;
-  TypingStatusTimer? _typingStatusTimer = TypingStatusTimer();
+  final _typingStatusTimer = TypingStatusTimer();
   final _participantsMap = HashMap<int, QBUser>();
   final _wrappedMessageSet = HashSet<QBMessageWrapper>();
   final _wrappedMessageActions = <QBMessageWrapper>[];
@@ -99,7 +99,7 @@ class ChatScreenBloc
   void dispose() async {
     await _unsubscribeConnectedChat();
     _typingUsersNames.clear();
-    _typingStatusTimer?.cancel();
+    _typingStatusTimer.cancel();
     super.dispose();
   }
 
@@ -290,8 +290,7 @@ class ChatScreenBloc
       states?.add(ErrorState("Dialog is null"));
     }
     String userName = await _storageRepository.getUserFullName();
-    String messageBody =
-        userName + ' created the group chat "${_dialog!.name}"';
+    String messageBody = '$userName created the group chat "${_dialog!.name}"';
     await _chatRepository.sendNotificationMessage(
         _dialogId, messageBody, ChatRepository.NOTIFICATION_TYPE_CREATE);
   }
@@ -310,12 +309,12 @@ class ChatScreenBloc
 
   void _sendNotificationMessageAddedUsers(List<QBUser?> users) async {
     List<String?> namesList = [];
-    users.forEach((element) {
+    for (var element in users) {
       namesList.add(element?.fullName ?? element?.login);
-    });
+    }
     String usersNames = namesList.join(', ');
     String userName = await _storageRepository.getUserFullName();
-    String messageBody = userName + ' added ' + usersNames;
+    String messageBody = '$userName added $usersNames';
     _chatRepository.sendNotificationMessage(
         _dialogId, messageBody, ChatRepository.NOTIFICATION_TYPE_ADD);
   }
@@ -329,7 +328,7 @@ class ChatScreenBloc
 
   Future<void> _sendNotificationMessageLeftChat() async {
     String messageBody =
-        await _storageRepository.getUserFullName() + " has left";
+        "${await _storageRepository.getUserFullName()} has left";
     _chatRepository.sendNotificationMessage(
         _dialogId, messageBody, ChatRepository.NOTIFICATION_TYPE_LEFT);
   }
@@ -543,7 +542,7 @@ class ChatScreenBloc
 
   Future<void> _loadMessages() async {
     int skip = 0;
-    if (_wrappedMessageSet.length > 0) {
+    if (_wrappedMessageSet.isNotEmpty) {
       skip = _wrappedMessageSet.length;
     }
 
@@ -586,15 +585,15 @@ class ChatScreenBloc
     if (_localUserId != null) {
       usersIds.add(_localUserId!);
     }
-    messages.forEach((message) {
+    for (var message in messages) {
       if (message != null && message.senderId != null) {
         usersIds.add(message.senderId!);
       }
-    });
+    }
 
     List<QBUser?> users =
         await _usersRepository.getUsersByIds(usersIds.toList());
-    if (users.length > 0) {
+    if (users.isNotEmpty) {
       _saveParticipants(users);
     }
   }
@@ -636,7 +635,7 @@ class ChatScreenBloc
       if (sender == null && message.senderId != null) {
         List<QBUser?> users =
             await _usersRepository.getUsersByIds([message.senderId!]);
-        if (users.length > 0) {
+        if (users.isNotEmpty) {
           sender = users[0];
           _saveParticipants(users);
         }
@@ -696,11 +695,11 @@ class ChatScreenBloc
     if (userId == _localUserId) {
       return;
     }
-    if (dialogId == this._dialogId) {
+    if (dialogId == _dialogId) {
       var user = _getParticipantById(userId);
       if (user == null) {
         List<QBUser?> users = await _usersRepository.getUsersByIds([userId]);
-        if (users.length > 0) {
+        if (users.isNotEmpty) {
           _saveParticipants(users);
           user = users[0];
         }
@@ -713,7 +712,7 @@ class ChatScreenBloc
       _typingUsersNames.remove(userName);
       _typingUsersNames.insert(0, userName);
       states?.add(OpponentIsTypingState(_typingUsersNames));
-      _typingStatusTimer?.cancelWithDelay(() {
+      _typingStatusTimer.cancelWithDelay(() {
         states?.add(OpponentStoppedTypingState());
         _typingUsersNames.remove(userName);
       });

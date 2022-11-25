@@ -6,14 +6,14 @@ import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
-import 'package:quickblox_polls_feature/presentation/screens/chat/chate_poll_item.dart';
+import 'package:quickblox_polls_feature/presentation/screens/chat/chat_poll_item.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
 import '../../../bloc/chat/chat_screen_bloc.dart';
 import '../../../bloc/chat/chat_screen_events.dart';
 import '../../../bloc/chat/chat_screen_states.dart';
-import '../../../models/create_poll.dart';
 import '../../../models/message_wrapper.dart';
+import '../../../models/poll_action.dart';
 import '../../../stream_builder_with_listener.dart';
 import '../../../utils/color_util.dart';
 import '../../../utils/notification_utils.dart';
@@ -25,7 +25,7 @@ import '../base_screen_state.dart';
 import 'chat_list_item.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String _dialogId = '637b222132eaaf006da3343e';
+  final String _dialogId = '6380c99032eaaf003390da08';
   final bool _isNewChat = false;
 
   const ChatScreen({super.key});
@@ -162,11 +162,12 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                 }
                                 return GestureDetector(
                                     child: ChatListItem(
-                                        Key(
-                                          RandomUtil.getRandomString(10),
-                                        ),
-                                        message,
-                                        _dialogType),
+                                      Key(
+                                        RandomUtil.getRandomString(10),
+                                      ),
+                                      message,
+                                      _dialogType,
+                                    ),
                                     onTapDown: (details) {
                                       tapPosition = details.globalPosition;
                                     },
@@ -312,7 +313,7 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                       Icons.poll,
                       color: Colors.blue,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       final formKey = GlobalKey<FormState>();
                       final pollTitleController = TextEditingController();
                       final pollOption1Controller = TextEditingController();
@@ -320,18 +321,16 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                       final pollOption3Controller = TextEditingController();
                       final pollOption4Controller = TextEditingController();
 
-                      showModalBottomSheet(
+                      await showModalBottomSheet(
                         isScrollControlled: true,
                         enableDrag: true,
-                        // constraints: const BoxConstraints(
-                        //   maxHeight: 500,
-                        // ),
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(25.0),
+                            top: Radius.circular(20.0),
                           ),
                         ),
                         context: context,
+                        backgroundColor: Colors.white,
                         builder: (context) {
                           return Padding(
                             padding: EdgeInsets.only(
@@ -340,15 +339,13 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                             child: Container(
                               // height: 500,
                               padding: const EdgeInsets.all(20.0),
-                              color: Colors.white,
                               child: Form(
                                 key: formKey,
                                 child: SingleChildScrollView(
                                   child: Column(
-                                    // mainAxisSize: MainAxisSize.min,
                                     children: [
                                       PollTextFieldRow(
-                                        label: 'Poll Title',
+                                        label: 'Enter Poll Title here',
                                         txtController: pollTitleController,
                                       ),
                                       PollTextFieldRow(

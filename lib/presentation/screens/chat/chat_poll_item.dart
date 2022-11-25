@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quickblox_polls_feature/bloc/chat/chat_screen_bloc.dart';
 import 'package:quickblox_polls_feature/bloc/chat/chat_screen_events.dart';
-import 'package:quickblox_polls_feature/models/create_poll.dart';
+import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_polls_feature/presentation/screens/chat/avatar_noname.dart';
 import 'package:quickblox_polls_feature/presentation/screens/chat/polls.dart';
@@ -13,9 +13,12 @@ class ChatPollItem extends StatelessWidget {
   final List<PollMessageVote> votes;
   final int? dialogType;
 
-  const ChatPollItem(
-      {required this.message, required this.votes, this.dialogType, Key? key})
-      : super(key: key);
+  const ChatPollItem({
+    required this.message,
+    required this.votes,
+    this.dialogType,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +84,7 @@ class ChatPollItem extends StatelessWidget {
                                     .length
                                     .toDouble()))
                             .toList(),
-                        question: Text(
+                        pollTitle: Text(
                           message.pollTitle,
                         ),
                       ),
