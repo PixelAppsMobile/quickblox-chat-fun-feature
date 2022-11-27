@@ -10,16 +10,16 @@ import 'package:quickblox_sdk/chat/constants.dart';
 
 class ChatPollItem extends StatelessWidget {
   final PollMessageCreate message;
-  final List<PollMessageVote> votes;
+
   final int? dialogType;
 
-  const ChatPollItem(
-      {required this.message, required this.votes, this.dialogType, Key? key})
+  const ChatPollItem({required this.message, this.dialogType, Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final List<int?> voters = votes.map((e) => e.senderID).toList();
+    final List<int?> voters =
+        message.votes.keys.map((e) => int.parse(e)).toList();
     bool hasVoted = voters.contains(message.currentUserId);
 
     return Container(
@@ -53,8 +53,8 @@ class ChatPollItem extends StatelessWidget {
                                 ?.add(
                                   VoteToPollEvent(
                                     PollActionVote(
-                                      pollId: message.pollID,
-                                      voteOptionId: pollOption.optionId!,
+                                      poll: message,
+                                      choosenOptionID: pollOption.optionId!,
                                     ),
                                   ),
                                 );
@@ -75,8 +75,7 @@ class ChatPollItem extends StatelessWidget {
                             .map((e) => PollOption(
                                 optionId: e.key,
                                 option: e.value,
-                                value: votes
-                                    .map((e) => e.choosenOption)
+                                value: message.votes.values
                                     .where((option) => option == e.key)
                                     .length
                                     .toDouble()))

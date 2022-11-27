@@ -47,6 +47,7 @@ dependencies:
   grouped_list: ^4.1.0
   connectivity: ^3.0.6
   uuid: ^3.0.7
+  flutter_dotenv: ^5.0.2
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +73,7 @@ flutter:
 
   assets:
     - assets/icons/
+    - keys.env
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

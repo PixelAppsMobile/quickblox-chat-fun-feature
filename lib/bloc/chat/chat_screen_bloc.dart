@@ -6,6 +6,7 @@ import 'package:quickblox_polls_feature/models/create_poll.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/mappers/qb_message_mapper.dart';
+import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 import 'package:quickblox_sdk/models/qb_user.dart';
@@ -50,7 +51,7 @@ class ChatScreenBloc
   TypingStatusTimer? _typingStatusTimer = TypingStatusTimer();
   final _participantsMap = HashMap<int, QBUser>();
   final _wrappedMessageSet = HashSet<QBMessageWrapper>();
-  final _wrappedMessageActions = <QBMessageWrapper>[];
+
   final _typingUsersNames = <String>[];
 
   StreamSubscription? _incomingMessagesSubscription;
@@ -388,8 +389,8 @@ class ChatScreenBloc
           break;
         }
       }
-      states?.add(LoadMessagesSuccessState(
-          _getMessageListSortedByDate(), _wrappedMessageActions, true));
+      states
+          ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
     }
   }
 
@@ -421,8 +422,8 @@ class ChatScreenBloc
           break;
         }
       }
-      states?.add(LoadMessagesSuccessState(
-          _getMessageListSortedByDate(), _wrappedMessageActions, true));
+      states
+          ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
     }
   }
 
@@ -447,8 +448,8 @@ class ChatScreenBloc
       QBMessage? message = QBMessageMapper.mapToQBMessage(payload);
       _wrappedMessageSet.addAll(await _wrapMessages([message]));
 
-      states?.add(LoadMessagesSuccessState(
-          _getMessageListSortedByDate(), _wrappedMessageActions, true));
+      states
+          ?.add(LoadMessagesSuccessState(_getMessageListSortedByDate(), true));
     }
   }
 
@@ -572,8 +573,8 @@ class ChatScreenBloc
         await _subscribeEvents();
       }
 
-      states?.add(LoadMessagesSuccessState(
-          _getMessageListSortedByDate(), _wrappedMessageActions, hasMore));
+      states?.add(
+          LoadMessagesSuccessState(_getMessageListSortedByDate(), hasMore));
     }
   }
 
@@ -618,10 +619,8 @@ class ChatScreenBloc
   }
 
   Future<void> _sendVotePollMessage({required PollActionVote data}) async {
-    await _chatRepository.sendVotePollMessage(
-      _dialogId,
-      data: data,
-    );
+    await _chatRepository.sendVotePollMessage(_dialogId,
+        currentUserID: _localUserId!.toString(), data: data);
   }
 
   Future<List<QBMessageWrapper>> _wrapMessages(
@@ -643,14 +642,25 @@ class ChatScreenBloc
       }
       String senderName = sender?.fullName ?? sender?.login ?? "DELETED User";
 
-      //Message Actions
       if (message.properties?['action'] == 'pollActionVote') {
-        _wrappedMessageActions
-            .add(PollMessageVote(senderName, message, _localUserId!));
+        final id = message.properties!['pollID']!;
+        final pollObject =
+            await _chatRepository.getCustomObject(ids: [id], className: "Poll");
+        final poll = PollMessageCreate.fromCustomObject(
+            senderName, message, _localUserId!, pollObject!.first!);
+
+        wrappedMessages.removeWhere(
+            (element) => element is PollMessageCreate && element.pollID == id);
+        wrappedMessages.add(poll);
+
         //Displayed Messages
       } else if (message.properties?['action'] == 'pollActionCreate') {
-        wrappedMessages
-            .add(PollMessageCreate(senderName, message, _localUserId!));
+        final pollObject = await _chatRepository.getCustomObject(
+            ids: [message.properties!['pollID']!], className: "Poll");
+        final poll = PollMessageCreate.fromCustomObject(
+            senderName, message, _localUserId!, pollObject!.first!);
+
+        wrappedMessages.add(poll);
       } else {
         wrappedMessages
             .add(QBMessageWrapper(senderName, message, _localUserId!));

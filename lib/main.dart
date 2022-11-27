@@ -8,18 +8,21 @@ import 'package:quickblox_polls_feature/presentation/screens/splash/splash_scree
 import 'bloc/chat/chat_screen_bloc.dart';
 import 'bloc/login/login_screen_bloc.dart';
 import 'bloc/splash/bloc/splash_screen_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   await Hive.initFlutter();
+  await loadKeys();
+
   runApp(const MyApp());
 }
 
 const String DEFAULT_USER_PASSWORD = "quickblox";
 
-const String APPLICATION_ID = "98873";
-const String AUTH_KEY = "XrRVVg6MTGwyDOz";
-const String AUTH_SECRET = "wNuD9KZeW9JuqUB";
-const String ACCOUNT_KEY = "J-GzyJLoeRt_hFQwdh_Z";
+late final String APPLICATION_ID;
+late final String AUTH_KEY;
+late final String AUTH_SECRET;
+late final String ACCOUNT_KEY;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -63,4 +66,12 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> loadKeys() async {
+  await dotenv.load(fileName: 'keys.env');
+  APPLICATION_ID = dotenv.env['application_id']!;
+  AUTH_KEY = dotenv.env['authorization_key']!;
+  AUTH_SECRET = dotenv.env['authorization_secret']!;
+  ACCOUNT_KEY = dotenv.env['account_key']!;
 }

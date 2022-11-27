@@ -4,6 +4,7 @@ import 'dart:core';
 import 'package:quickblox_polls_feature/data/repository_exception.dart';
 import 'package:quickblox_polls_feature/models/create_poll.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
+import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 import 'package:quickblox_sdk/models/qb_filter.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
@@ -138,26 +139,36 @@ class ChatRepository {
       throw RepositoryException(_parameterIsNullException,
           affectedParams: ["dialogId"]);
     }
+    final List<QBCustomObject?> pollObject =
+        await QB.data.create(className: 'Poll', fields: data.toJson());
+    final pollID = pollObject.first!.id!;
+
     await QB.chat.sendMessage(
       dialogId,
       saveToHistory: true,
       markable: true,
-      properties: data.toJson(),
+      properties: {"action": "pollActionCreate", "pollID": pollID},
     );
   }
 
   Future<void> sendVotePollMessage(String? dialogId,
-      {required PollActionVote data}) async {
+      {required PollActionVote data, required String currentUserID}) async {
     if (dialogId == null) {
       throw RepositoryException(_parameterIsNullException,
           affectedParams: ["dialogId"]);
     }
+    await QB.data
+        .update("Poll", id: data.poll.pollID, fields: data.updatedFields);
     await QB.chat.sendMessage(
       dialogId,
-      saveToHistory: true,
       markable: true,
-      properties: data.toJson(),
+      properties: {"action": "pollActionVote", "pollID": data.poll.pollID},
     );
+  }
+
+  Future<List<QBCustomObject?>?> getCustomObject(
+      {required List<String> ids, required String className}) {
+    return QB.data.getByIds("Poll", ids);
   }
 
   Future<bool> isJoinedDialog(String? dialogId) async {

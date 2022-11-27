@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:uuid/uuid.dart';
 
 class PollActionCreate {
@@ -7,47 +8,43 @@ class PollActionCreate {
     required this.pollId,
     required this.pollTitle,
     required this.pollOptions,
-    // required this.pollVoters,
   });
   final String pollId;
   final String pollTitle;
   final Map<String, String> pollOptions;
-  // final Map<String, List<int>> pollVoters;
 
   factory PollActionCreate.fromData(
     String title,
     List<String> options,
-    // final Map<String, List<int>> pollVoters,
   ) {
     const uuid = Uuid();
     return PollActionCreate(
       pollId: uuid.v4(),
       pollTitle: title,
       pollOptions: {for (var element in options) uuid.v4(): element},
-      // pollVoters: pollVoters,
     );
   }
   Map<String, String> toJson() {
     return {
-      "action": "pollActionCreate",
-      "pollId": pollId,
-      "pollTitle": pollTitle,
-      "pollOptions": jsonEncode(pollOptions),
-      // "pollVoters": jsonEncode(pollVoters),
+      "title": pollTitle,
+      "options": jsonEncode(pollOptions),
+      "votes": jsonEncode({})
     };
   }
 }
 
 class PollActionVote {
-  const PollActionVote({required this.pollId, required this.voteOptionId});
-  final String pollId;
+  const PollActionVote({required this.poll, required this.choosenOptionID});
+  final PollMessageCreate poll;
+  final String choosenOptionID;
 
-  final String voteOptionId;
-  Map<String, String> toJson() {
+  Map<String, String> get updatedFields {
+    final votes = poll.votes;
+    votes[poll.currentUserId.toString()] = choosenOptionID;
     return {
-      "action": "pollActionVote",
-      "pollId": pollId,
-      "chosenOption": voteOptionId
+      "title": poll.pollTitle,
+      "options": jsonEncode(poll.options),
+      "votes": jsonEncode(votes)
     };
   }
 }

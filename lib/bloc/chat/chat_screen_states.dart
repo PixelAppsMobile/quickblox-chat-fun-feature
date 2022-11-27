@@ -1,3 +1,4 @@
+import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 
 import '../../../models/message_wrapper.dart';
@@ -36,10 +37,10 @@ class LoadMessagesInProgressState extends ChatScreenStates {}
 
 class LoadMessagesSuccessState extends ChatScreenStates {
   final List<QBMessageWrapper> messages;
-  final List<QBMessageWrapper> messageActions;
+
   final bool hasMore;
 
-  LoadMessagesSuccessState(this.messages, this.messageActions, this.hasMore);
+  LoadMessagesSuccessState(this.messages, this.hasMore);
 }
 
 class LoadNextMessagesErrorState extends ChatScreenStates {

@@ -25,7 +25,7 @@ import '../base_screen_state.dart';
 import 'chat_list_item.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String _dialogId = '637b222132eaaf006da3343e';
+  final String _dialogId = '6383998e07a49d0071bc94b7';
   final bool _isNewChat = false;
 
   const ChatScreen({super.key});
@@ -91,7 +91,7 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                     child: StreamProvider<ChatScreenStates>(
                       create: (context) =>
                           bloc?.states?.stream as Stream<ChatScreenStates>,
-                      initialData: LoadMessagesSuccessState([], [], false),
+                      initialData: LoadMessagesSuccessState([], false),
                       child: Selector<ChatScreenStates, ChatScreenStates>(
                           selector: (_, state) => state,
                           shouldRebuild: (previous, next) {
@@ -144,15 +144,8 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                   ]),
                               itemBuilder: (context, QBMessageWrapper message) {
                                 if (message is PollMessageCreate) {
-                                  final pollVotes = List<PollMessageVote>.from(
-                                      state.messageActions.where((action) =>
-                                          action is PollMessageVote &&
-                                          action.pollID == message.pollID));
-                                  print(
-                                      "Poll ${message.pollTitle} ${pollVotes.length}");
                                   return ChatPollItem(
                                     message: message,
-                                    votes: pollVotes,
                                     key: ValueKey(
                                       Key(
                                         RandomUtil.getRandomString(10),
