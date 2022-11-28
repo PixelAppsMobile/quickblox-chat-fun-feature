@@ -1,4 +1,4 @@
-import 'package:quickblox_polls_feature/models/create_poll.dart';
+import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 
 /// Created by Injoit in 2021.

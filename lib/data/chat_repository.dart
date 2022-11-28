@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:core';
 
 import 'package:quickblox_polls_feature/data/repository_exception.dart';
-import 'package:quickblox_polls_feature/models/create_poll.dart';
+import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/file/module.dart';
 import 'package:quickblox_sdk/models/qb_custom_object.dart';
