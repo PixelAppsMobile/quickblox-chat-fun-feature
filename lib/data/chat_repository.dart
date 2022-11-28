@@ -1,9 +1,11 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:core';
 
 import 'package:quickblox_polls_feature/data/repository_exception.dart';
 import 'package:quickblox_polls_feature/models/create_poll.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
+import 'package:quickblox_sdk/file/module.dart';
 import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 import 'package:quickblox_sdk/models/qb_filter.dart';
@@ -157,12 +159,13 @@ class ChatRepository {
       throw RepositoryException(_parameterIsNullException,
           affectedParams: ["dialogId"]);
     }
-    await QB.data
-        .update("Poll", id: data.poll.pollID, fields: data.updatedFields);
+
+    await QB.data.update("Poll", id: data.pollID, fields: data.updatedVotes);
+
     await QB.chat.sendMessage(
       dialogId,
       markable: true,
-      properties: {"action": "pollActionVote", "pollID": data.poll.pollID},
+      properties: {"action": "pollActionVote", "pollID": data.pollID},
     );
   }
 

@@ -9,7 +9,7 @@ import 'package:quickblox_polls_feature/presentation/screens/chat/polls.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
 class ChatPollItem extends StatelessWidget {
-  final PollMessageCreate message;
+  final PollMessage message;
 
   final int? dialogType;
 
@@ -53,7 +53,10 @@ class ChatPollItem extends StatelessWidget {
                                 ?.add(
                                   VoteToPollEvent(
                                     PollActionVote(
-                                      poll: message,
+                                      pollID: message.pollID,
+                                      votes: message.votes,
+                                      currentUserID:
+                                          message.currentUserId.toString(),
                                       choosenOptionID: pollOption.optionId!,
                                     ),
                                   ),

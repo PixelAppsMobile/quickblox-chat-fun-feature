@@ -34,17 +34,18 @@ class PollActionCreate {
 }
 
 class PollActionVote {
-  const PollActionVote({required this.poll, required this.choosenOptionID});
-  final PollMessageCreate poll;
+  const PollActionVote(
+      {required this.pollID,
+      required this.votes,
+      required this.currentUserID,
+      required this.choosenOptionID});
+  final String pollID;
+  final Map<String, String> votes;
   final String choosenOptionID;
+  final String currentUserID;
 
-  Map<String, String> get updatedFields {
-    final votes = poll.votes;
-    votes[poll.currentUserId.toString()] = choosenOptionID;
-    return {
-      "title": poll.pollTitle,
-      "options": jsonEncode(poll.options),
-      "votes": jsonEncode(votes)
-    };
+  Map<String, String> get updatedVotes {
+    votes[currentUserID] = choosenOptionID;
+    return {"votes": jsonEncode(votes)};
   }
 }

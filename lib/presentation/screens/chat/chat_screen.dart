@@ -25,7 +25,7 @@ import '../base_screen_state.dart';
 import 'chat_list_item.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String _dialogId = '6383998e07a49d0071bc94b7';
+  final String _dialogId = '6384e0f107a49d0032bc95b8';
   final bool _isNewChat = false;
 
   const ChatScreen({super.key});
@@ -143,7 +143,7 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                     )
                                   ]),
                               itemBuilder: (context, QBMessageWrapper message) {
-                                if (message is PollMessageCreate) {
+                                if (message is PollMessage) {
                                   return ChatPollItem(
                                     message: message,
                                     key: ValueKey(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:quickblox_polls_feature/models/create_poll.dart';
@@ -646,18 +647,20 @@ class ChatScreenBloc
         final id = message.properties!['pollID']!;
         final pollObject =
             await _chatRepository.getCustomObject(ids: [id], className: "Poll");
-        final poll = PollMessageCreate.fromCustomObject(
-            senderName, message, _localUserId!, pollObject!.first!);
-
-        wrappedMessages.removeWhere(
-            (element) => element is PollMessageCreate && element.pollID == id);
-        wrappedMessages.add(poll);
+        final votes = Map<String, String>.from(
+            jsonDecode(pollObject!.first!.fields!['votes'] as String));
+        final pollMessage = _wrappedMessageSet.firstWhere(
+                (element) => element is PollMessage && element.pollID == id)
+            as PollMessage;
+        _wrappedMessageSet.removeWhere(
+            (element) => element is PollMessage && element.pollID == id);
+        wrappedMessages.add(pollMessage.copyWith(votes: votes));
 
         //Displayed Messages
       } else if (message.properties?['action'] == 'pollActionCreate') {
         final pollObject = await _chatRepository.getCustomObject(
             ids: [message.properties!['pollID']!], className: "Poll");
-        final poll = PollMessageCreate.fromCustomObject(
+        final poll = PollMessage.fromCustomObject(
             senderName, message, _localUserId!, pollObject!.first!);
 
         wrappedMessages.add(poll);
