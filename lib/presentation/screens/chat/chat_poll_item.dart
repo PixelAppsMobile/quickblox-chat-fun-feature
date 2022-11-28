@@ -19,7 +19,7 @@ class ChatPollItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<int?> voters =
-        message.votes.keys.map((e) => int.parse(e)).toList();
+        message.votes.keys.map((userId) => int.parse(userId)).toList();
     bool hasVoted = voters.contains(message.currentUserId);
 
     return Container(
@@ -75,11 +75,12 @@ class ChatPollItem extends StatelessWidget {
                         outlineColor: Colors.transparent,
                         hasVoted: hasVoted,
                         children: message.options.entries
-                            .map((e) => PollOption(
-                                optionId: e.key,
-                                option: e.value,
+                            .map((option) => PollOption(
+                                optionId: option.key, //OptionID
+                                option: option.value, //Option Value (Text)
                                 value: message.votes.values
-                                    .where((option) => option == e.key)
+                                    .where((choosenOptionID) =>
+                                        choosenOptionID == option.key)
                                     .length
                                     .toDouble()))
                             .toList(),

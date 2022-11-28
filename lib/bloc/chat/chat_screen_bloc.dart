@@ -7,7 +7,6 @@ import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/mappers/qb_message_mapper.dart';
-import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 import 'package:quickblox_sdk/models/qb_user.dart';

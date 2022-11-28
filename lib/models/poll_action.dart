@@ -1,15 +1,13 @@
 import 'dart:convert';
 
-import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:uuid/uuid.dart';
 
 class PollActionCreate {
   PollActionCreate({
-    required this.pollId,
     required this.pollTitle,
     required this.pollOptions,
   });
-  final String pollId;
+
   final String pollTitle;
   final Map<String, String> pollOptions;
 
@@ -19,7 +17,6 @@ class PollActionCreate {
   ) {
     const uuid = Uuid();
     return PollActionCreate(
-      pollId: uuid.v4(),
       pollTitle: title,
       pollOptions: {for (var element in options) uuid.v4(): element},
     );
