@@ -3,8 +3,10 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
+import 'package:quickblox_polls_feature/models/reaction_message.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/mappers/qb_message_mapper.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
@@ -146,7 +148,10 @@ class ChatScreenBloc
       try {
         await _chatRepository.sendStoppedTyping(_dialogId);
         await Future.delayed(const Duration(milliseconds: 300), () async {
-          await _sendTextMessage(trimmedMessage);
+          await _sendTextMessage(
+            trimmedMessage,
+            data: MessageReactProperties.fromData(),
+          );
         });
       } on PlatformException catch (e) {
         states?.add(SendMessageErrorState(
@@ -189,6 +194,23 @@ class ChatScreenBloc
         );
       } on RepositoryException catch (e) {
         states?.add(SendMessageErrorState(e.message, 'Can\'t vote poll'));
+      }
+    }
+
+    if (receivedEvent is ReactMessageEvent) {
+      try {
+        await Future.delayed(const Duration(milliseconds: 300), () async {
+          await _sendReactMessage(
+            data: receivedEvent.data,
+          );
+        });
+      } on PlatformException catch (e) {
+        states?.add(
+          SendMessageErrorState(makeErrorMessage(e), 'Can\'t react to message'),
+        );
+      } on RepositoryException catch (e) {
+        states
+            ?.add(SendMessageErrorState(e.message, 'Can\'t react to message'));
       }
     }
 
@@ -599,7 +621,8 @@ class ChatScreenBloc
     }
   }
 
-  Future<void> _sendTextMessage(String text) async {
+  Future<void> _sendTextMessage(String text,
+      {required MessageReactProperties data}) async {
     if (text.length > TEXT_MESSAGE_MAX_SIZE) {
       text = text.substring(0, TEXT_MESSAGE_MAX_SIZE);
     }
@@ -607,6 +630,14 @@ class ChatScreenBloc
     await _chatRepository.sendMessage(
       _dialogId,
       text,
+      data: data,
+    );
+  }
+
+  Future<void> _sendReactMessage({required MessageActionReact data}) async {
+    await _chatRepository.sendReactMessage(
+      _dialogId,
+      data: data,
     );
   }
 
@@ -662,9 +693,52 @@ class ChatScreenBloc
             senderName, message, _localUserId!, pollObject!.first!);
 
         wrappedMessages.add(poll);
+      } else if (message.properties?['action'] == 'messageActionReact') {
+        final id = message.properties!['messageReactId']!;
+        try {
+          final reactObject = await _chatRepository
+              .getCustomObject(ids: [id], className: 'Reaction');
+          if (reactObject != null) {
+            final reacts = Map<String, String>.from(
+              jsonDecode(reactObject.first!.fields!['reacts'] as String),
+            );
+            final reactMessage = _wrappedMessageSet.firstWhere((element) =>
+                    element is ReactionMessage && element.messageReactId == id)
+                as ReactionMessage;
+            _wrappedMessageSet.removeWhere((element) =>
+                element is ReactionMessage && element.messageReactId == id);
+            wrappedMessages.add(
+              reactMessage.copyWith(reacts: reacts),
+            );
+          }
+        } catch (e) {
+          wrappedMessages
+              .add(QBMessageWrapper(senderName, message, _localUserId!));
+        }
       } else {
-        wrappedMessages
-            .add(QBMessageWrapper(senderName, message, _localUserId!));
+        if (message.properties!['messageReactId'] != null) {
+          final id = message.properties!['messageReactId']!;
+          try {
+            final reactObject = await _chatRepository
+                .getCustomObject(ids: [id], className: 'Reaction');
+            if (reactObject != null) {
+              wrappedMessages.add(
+                ReactionMessage.fromCustomObject(
+                  senderName,
+                  message,
+                  _localUserId!,
+                  reactObject.first!,
+                ),
+              );
+            }
+          } catch (e) {
+            wrappedMessages
+                .add(QBMessageWrapper(senderName, message, _localUserId!));
+          }
+        } else {
+          wrappedMessages
+              .add(QBMessageWrapper(senderName, message, _localUserId!));
+        }
       }
     }
     return wrappedMessages;

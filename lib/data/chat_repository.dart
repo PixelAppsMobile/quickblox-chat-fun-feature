@@ -1,11 +1,10 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:core';
 
 import 'package:quickblox_polls_feature/data/repository_exception.dart';
+import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
-import 'package:quickblox_sdk/file/module.dart';
 import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 import 'package:quickblox_sdk/models/qb_filter.dart';
@@ -121,11 +120,21 @@ class ChatRepository {
   }
 
   Future<void> sendMessage(String? dialogId, String messageBody,
-      {Map<String, String>? properties}) async {
+      {Map<String, String>? properties,
+      required MessageReactProperties data}) async {
     if (dialogId == null) {
       throw RepositoryException(_parameterIsNullException,
           affectedParams: ["dialogId"]);
     }
+
+    final List<QBCustomObject?> reactObject = await QB.data.create(
+      className: 'Reaction',
+      fields: data.toJson(),
+    );
+    final messageReactId = reactObject.first!.id!;
+    properties ??= <String, String>{};
+    properties['messageReactId'] = messageReactId;
+
     await QB.chat.sendMessage(
       dialogId,
       body: messageBody,
@@ -169,9 +178,34 @@ class ChatRepository {
     );
   }
 
+  Future<void> sendReactMessage(
+    String? dialogId, {
+    required MessageActionReact data,
+  }) async {
+    if (dialogId == null) {
+      throw RepositoryException(_parameterIsNullException,
+          affectedParams: ["dialogId"]);
+    }
+
+    await QB.data.update(
+      "Reaction",
+      id: data.messageReactId,
+      fields: data.updatedReacts,
+    );
+
+    await QB.chat.sendMessage(
+      dialogId,
+      markable: true,
+      properties: {
+        "action": "messageActionReact",
+        "messageReactId": data.messageReactId
+      },
+    );
+  }
+
   Future<List<QBCustomObject?>?> getCustomObject(
       {required List<String> ids, required String className}) {
-    return QB.data.getByIds("Poll", ids);
+    return QB.data.getByIds(className, ids);
   }
 
   Future<bool> isJoinedDialog(String? dialogId) async {

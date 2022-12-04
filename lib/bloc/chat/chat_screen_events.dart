@@ -1,3 +1,4 @@
+import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 
@@ -26,6 +27,12 @@ class SendMessageEvent extends ChatScreenEvents {
   final String? textMessage;
 
   SendMessageEvent(this.textMessage);
+}
+
+class ReactMessageEvent extends ChatScreenEvents {
+  final MessageActionReact data;
+
+  ReactMessageEvent(this.data);
 }
 
 class CreatePollMessageEvent extends ChatScreenEvents {

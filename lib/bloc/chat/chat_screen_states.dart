@@ -1,4 +1,3 @@
-import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
 
 import '../../../models/message_wrapper.dart';
