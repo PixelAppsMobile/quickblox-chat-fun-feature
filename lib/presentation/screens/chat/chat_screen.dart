@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -156,6 +157,16 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                     ),
                                   );
                                 }
+                                var reactionCountMap = <String, int>{};
+                                if (message is ReactionMessage) {
+                                  var elements = message.reacts.values.toList();
+                                  for (var x in elements) {
+                                    reactionCountMap[x] =
+                                        !reactionCountMap.containsKey(x)
+                                            ? (1)
+                                            : (reactionCountMap[x]! + 1);
+                                  }
+                                }
 
                                 return GestureDetector(
                                     child: Stack(
@@ -194,14 +205,26 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                                     child: Row(
                                                       children: [
                                                         for (var reaction
-                                                            in message
-                                                                .reacts.values
-                                                                .toSet())
-                                                          Image.asset(
-                                                            REACTION_ID_MAP[
-                                                                reaction]!,
-                                                            height: 13,
-                                                            width: 13,
+                                                            in reactionCountMap
+                                                                .entries)
+                                                          Row(
+                                                            children: [
+                                                              Image.asset(
+                                                                REACTION_ID_MAP[
+                                                                    reaction
+                                                                        .key]!,
+                                                                height: 13,
+                                                                width: 13,
+                                                              ),
+                                                              Text(
+                                                                '${reaction.value} ',
+                                                                style:
+                                                                    const TextStyle(
+                                                                  fontSize:
+                                                                      12.0,
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
                                                       ],
                                                     ),
