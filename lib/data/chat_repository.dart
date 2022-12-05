@@ -119,9 +119,12 @@ class ChatRepository {
     return QB.chat.getOnlineUsers(dialogId) as Future<List<int>>;
   }
 
-  Future<void> sendMessage(String? dialogId, String messageBody,
-      {Map<String, String>? properties,
-      required MessageReactProperties data}) async {
+  Future<void> sendMessage(
+    String? dialogId,
+    String messageBody, {
+    Map<String, String>? properties,
+    required MessageReactProperties reactProperties,
+  }) async {
     if (dialogId == null) {
       throw RepositoryException(_parameterIsNullException,
           affectedParams: ["dialogId"]);
@@ -129,7 +132,7 @@ class ChatRepository {
 
     final List<QBCustomObject?> reactObject = await QB.data.create(
       className: 'Reaction',
-      fields: data.toJson(),
+      fields: reactProperties.toJson(),
     );
     final messageReactId = reactObject.first!.id!;
     properties ??= <String, String>{};

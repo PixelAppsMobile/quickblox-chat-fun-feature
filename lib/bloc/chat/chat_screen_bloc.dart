@@ -150,7 +150,7 @@ class ChatScreenBloc
         await Future.delayed(const Duration(milliseconds: 300), () async {
           await _sendTextMessage(
             trimmedMessage,
-            data: MessageReactProperties.fromData(),
+            reactProperties: MessageReactProperties.fromData(),
           );
         });
       } on PlatformException catch (e) {
@@ -621,8 +621,10 @@ class ChatScreenBloc
     }
   }
 
-  Future<void> _sendTextMessage(String text,
-      {required MessageReactProperties data}) async {
+  Future<void> _sendTextMessage(
+    String text, {
+    required MessageReactProperties reactProperties,
+  }) async {
     if (text.length > TEXT_MESSAGE_MAX_SIZE) {
       text = text.substring(0, TEXT_MESSAGE_MAX_SIZE);
     }
@@ -630,7 +632,7 @@ class ChatScreenBloc
     await _chatRepository.sendMessage(
       _dialogId,
       text,
-      data: data,
+      reactProperties: reactProperties,
     );
   }
 

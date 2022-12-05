@@ -9,6 +9,7 @@ import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_polls_feature/models/reaction_message.dart';
 import 'package:quickblox_polls_feature/presentation/screens/chat/chat_poll_item.dart';
+import 'package:quickblox_polls_feature/presentation/widgets/popup_menu_widget.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
 import '../../../bloc/chat/chat_screen_bloc.dart';
@@ -168,35 +169,43 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                         ),
                                         if (message is ReactionMessage)
                                           Positioned(
-                                            right: 20,
-                                            bottom: 4,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey,
-                                                borderRadius:
-                                                    const BorderRadius.all(
-                                                  Radius.circular(10),
-                                                ),
-                                                border: Border.all(
-                                                  width: 3,
-                                                  color: Colors.grey,
-                                                  style: BorderStyle.solid,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  for (var reaction in message
-                                                      .reacts.values
-                                                      .toSet())
-                                                    Image.asset(
-                                                      REACTION_ID_MAP[
-                                                          reaction]!,
-                                                      height: 13,
-                                                      width: 13,
+                                            right:
+                                                message.isIncoming ? null : 20,
+                                            left:
+                                                message.isIncoming ? 70 : null,
+                                            bottom: 0,
+                                            child: message.reacts.isEmpty
+                                                ? const SizedBox.shrink()
+                                                : Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey,
+                                                      borderRadius:
+                                                          const BorderRadius
+                                                              .all(
+                                                        Radius.circular(10),
+                                                      ),
+                                                      border: Border.all(
+                                                        width: 3,
+                                                        color: Colors.grey,
+                                                        style:
+                                                            BorderStyle.solid,
+                                                      ),
                                                     ),
-                                                ],
-                                              ),
-                                            ),
+                                                    child: Row(
+                                                      children: [
+                                                        for (var reaction
+                                                            in message
+                                                                .reacts.values
+                                                                .toSet())
+                                                          Image.asset(
+                                                            REACTION_ID_MAP[
+                                                                reaction]!,
+                                                            height: 13,
+                                                            width: 13,
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
                                           ),
                                       ],
                                     ),
@@ -232,7 +241,9 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                                                   .qbMessage
                                                                   .properties![
                                                               "messageReactId"]!,
-                                                          reacts: {},
+                                                          reacts: (message
+                                                                  as ReactionMessage)
+                                                              .reacts,
                                                         ),
                                                       ),
                                                     );
@@ -1006,60 +1017,3 @@ class PollTextFieldRow extends StatelessWidget {
     );
   }
 }
-
-/// An arbitrary widget that lives in a popup menu
-class PopupMenuWidget<T> extends PopupMenuEntry<T> {
-  const PopupMenuWidget({
-    Key? key,
-    required this.height,
-    required this.child,
-  }) : super(key: key);
-  final Widget child;
-
-  @override
-  final double height;
-
-  @override
-  PopupMenuWidgetState createState() => PopupMenuWidgetState();
-
-  @override
-  bool represents(T? value) => true;
-}
-
-class PopupMenuWidgetState extends State<PopupMenuWidget> {
-  @override
-  Widget build(BuildContext context) => widget.child;
-}
-
-// class MyHomePage extends StatelessWidget {
-//   const MyHomePage({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         actions: <Widget>[
-//           PopupMenuButton<String>(onSelected: (String value) {
-//             print("You selected $value");
-//           }, itemBuilder: (BuildContext context) {
-//             return [
-//               PopupMenuWidget(
-//                 height: 40.0,
-//                 child: Row(
-//                   children: [
-//                     IconButton(
-//                         icon: Icon(Icons.add),
-//                         onPressed: () => Navigator.pop(context, 'add')),
-//                     IconButton(
-//                         icon: Icon(Icons.remove),
-//                         onPressed: () => Navigator.pop(context, 'remove')),
-//                   ],
-//                 ),
-//               ),
-//             ];
-//           }),
-//         ],
-//       ),
-//     );
-//   }
-// }
