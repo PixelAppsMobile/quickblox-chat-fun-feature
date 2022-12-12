@@ -7,6 +7,8 @@ import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_action.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_polls_feature/models/reaction_message.dart';
+import 'package:quickblox_polls_feature/models/sticker_message.dart';
+import 'package:quickblox_polls_feature/models/sticker_message_properties.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/mappers/qb_message_mapper.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
@@ -211,6 +213,24 @@ class ChatScreenBloc
       } on RepositoryException catch (e) {
         states
             ?.add(SendMessageErrorState(e.message, 'Can\'t react to message'));
+      }
+    }
+
+    if (receivedEvent is SendStickerMessageEvent) {
+      try {
+        await Future.delayed(const Duration(milliseconds: 300), () async {
+          await _sendStickerMessage(
+            stickerProperties: receivedEvent.stickerMessageProperties,
+          );
+        });
+      } on PlatformException catch (e) {
+        states?.add(
+          SendMessageErrorState(makeErrorMessage(e), 'Can\'t send sticker'),
+        );
+      } on RepositoryException catch (e) {
+        states?.add(
+          SendMessageErrorState(e.message, 'Can\'t send sticker'),
+        );
       }
     }
 
@@ -655,6 +675,15 @@ class ChatScreenBloc
         currentUserID: _localUserId!.toString(), data: data);
   }
 
+  Future<void> _sendStickerMessage({
+    required StickerMessageProperties stickerProperties,
+  }) async {
+    await _chatRepository.sendStickerMessage(
+      _dialogId,
+      data: stickerProperties,
+    );
+  }
+
   Future<List<QBMessageWrapper>> _wrapMessages(
       List<QBMessage?> messages) async {
     List<QBMessageWrapper> wrappedMessages = [];
@@ -717,30 +746,32 @@ class ChatScreenBloc
           wrappedMessages
               .add(QBMessageWrapper(senderName, message, _localUserId!));
         }
-      } else {
-        if (message.properties!['messageReactId'] != null) {
-          final id = message.properties!['messageReactId']!;
-          try {
-            final reactObject = await _chatRepository
-                .getCustomObject(ids: [id], className: 'Reaction');
-            if (reactObject != null) {
-              wrappedMessages.add(
-                ReactionMessage.fromCustomObject(
-                  senderName,
-                  message,
-                  _localUserId!,
-                  reactObject.first!,
-                ),
-              );
-            }
-          } catch (e) {
-            wrappedMessages
-                .add(QBMessageWrapper(senderName, message, _localUserId!));
+      } else if (message.properties?['messageReactId'] != null) {
+        final id = message.properties!['messageReactId']!;
+        try {
+          final reactObject = await _chatRepository
+              .getCustomObject(ids: [id], className: 'Reaction');
+          if (reactObject != null) {
+            wrappedMessages.add(
+              ReactionMessage.fromCustomObject(
+                senderName,
+                message,
+                _localUserId!,
+                reactObject.first!,
+              ),
+            );
           }
-        } else {
+        } catch (e) {
           wrappedMessages
               .add(QBMessageWrapper(senderName, message, _localUserId!));
         }
+      } else if (message.properties?['action'] == 'messageActionSticker') {
+        wrappedMessages.add(
+          StickerMessage.fromMessage(senderName, message, _localUserId!),
+        );
+      } else {
+        wrappedMessages
+            .add(QBMessageWrapper(senderName, message, _localUserId!));
       }
     }
     return wrappedMessages;

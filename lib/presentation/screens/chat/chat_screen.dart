@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/intl.dart';
@@ -9,9 +9,11 @@ import 'package:provider/provider.dart';
 import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_message.dart';
 import 'package:quickblox_polls_feature/models/reaction_message.dart';
+import 'package:quickblox_polls_feature/models/sticker_message_properties.dart';
 import 'package:quickblox_polls_feature/presentation/screens/chat/chat_poll_item.dart';
 import 'package:quickblox_polls_feature/presentation/widgets/popup_menu_widget.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
+import 'package:stipop_sdk/stipop_plugin.dart';
 
 import '../../../bloc/chat/chat_screen_bloc.dart';
 import '../../../bloc/chat/chat_screen_events.dart';
@@ -55,6 +57,7 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
   final maximumPollOptions = 4;
   final minimumPollOptions = 2;
   int currentPollOptions = 0;
+  Stipop stipop = Stipop();
 
   ScrollController? _scrollController;
   TextEditingController? _inputController = TextEditingController();
@@ -62,11 +65,36 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
   ChatScreenState(this._dialogId, this._isNewChat);
 
   @override
+  void initState() {
+    super.initState();
+    stipop.connect(
+      userId: dotenv.env['stipopApplicationId'],
+      onStickerPackSelected: (spPackage) {},
+      onStickerDoubleTapped: (sticker) {
+        bloc?.events?.add(
+          SendStickerMessageEvent(
+            StickerMessageProperties.fromData(sticker.stickerImg!),
+          ),
+        );
+      },
+      pickerViewAppear: (spIsViewAppear) {},
+      onStickerSingleTapped: (sticker) {
+        bloc?.events?.add(
+          SendStickerMessageEvent(
+            StickerMessageProperties.fromData(sticker.stickerImg!),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
   void dispose() {
     TypingStatusManager.cancelTimer();
     _scrollController?.removeListener(_scrollListener);
     _scrollController = null;
     _inputController = null;
+    stipop.hide();
     super.dispose();
   }
 
@@ -169,69 +197,80 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                 }
 
                                 return GestureDetector(
-                                    child: Stack(
-                                      children: [
-                                        ChatListItem(
-                                          Key(
-                                            RandomUtil.getRandomString(10),
-                                          ),
-                                          message,
-                                          _dialogType,
-                                        ),
-                                        if (message is ReactionMessage)
-                                          Positioned(
-                                            right:
-                                                message.isIncoming ? null : 20,
-                                            left:
-                                                message.isIncoming ? 70 : null,
-                                            bottom: 0,
-                                            child: message.reacts.isEmpty
-                                                ? const SizedBox.shrink()
-                                                : Container(
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey,
-                                                      borderRadius:
-                                                          const BorderRadius
-                                                              .all(
-                                                        Radius.circular(10),
-                                                      ),
-                                                      border: Border.all(
-                                                        width: 3,
-                                                        color: Colors.grey,
-                                                        style:
-                                                            BorderStyle.solid,
-                                                      ),
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        for (var reaction
-                                                            in reactionCountMap
-                                                                .entries)
-                                                          Row(
-                                                            children: [
-                                                              Image.asset(
-                                                                REACTION_ID_MAP[
-                                                                    reaction
-                                                                        .key]!,
-                                                                height: 13,
-                                                                width: 13,
-                                                              ),
-                                                              Text(
-                                                                '${reaction.value} ',
-                                                                style:
-                                                                    const TextStyle(
-                                                                  fontSize:
-                                                                      12.0,
-                                                                ),
-                                                              ),
-                                                            ],
+                                    child: message is ReactionMessage
+                                        ? Stack(
+                                            children: [
+                                              ChatListItem(
+                                                Key(
+                                                  RandomUtil.getRandomString(
+                                                      10),
+                                                ),
+                                                message,
+                                                _dialogType,
+                                              ),
+                                              Positioned(
+                                                right: message.isIncoming
+                                                    ? null
+                                                    : 20,
+                                                left: message.isIncoming
+                                                    ? 70
+                                                    : null,
+                                                bottom: 0,
+                                                child: message.reacts.isEmpty
+                                                    ? const SizedBox.shrink()
+                                                    : Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.grey,
+                                                          borderRadius:
+                                                              const BorderRadius
+                                                                  .all(
+                                                            Radius.circular(10),
                                                           ),
-                                                      ],
-                                                    ),
-                                                  ),
+                                                          border: Border.all(
+                                                            width: 3,
+                                                            color: Colors.grey,
+                                                            style: BorderStyle
+                                                                .solid,
+                                                          ),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            for (var reaction
+                                                                in reactionCountMap
+                                                                    .entries)
+                                                              Row(
+                                                                children: [
+                                                                  Image.asset(
+                                                                    REACTION_ID_MAP[
+                                                                        reaction
+                                                                            .key]!,
+                                                                    height: 13,
+                                                                    width: 13,
+                                                                  ),
+                                                                  Text(
+                                                                    '${reaction.value} ',
+                                                                    style:
+                                                                        const TextStyle(
+                                                                      fontSize:
+                                                                          12.0,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                              ),
+                                            ],
+                                          )
+                                        : ChatListItem(
+                                            Key(
+                                              RandomUtil.getRandomString(10),
+                                            ),
+                                            message,
+                                            _dialogType,
                                           ),
-                                      ],
-                                    ),
                                     onTapDown: (details) {
                                       tapPosition = details.globalPosition;
                                     },
@@ -241,41 +280,43 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                           .findRenderObject() as RenderBox;
 
                                       List<PopupMenuEntry> messageMenuItems = [
-                                        PopupMenuWidget(
-                                          height: 20,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: [
-                                              for (var reaction
-                                                  in REACTION_ID_MAP.entries)
-                                                _reactWidget(
-                                                  reaction.value,
-                                                  () {
-                                                    bloc?.events?.add(
-                                                      ReactMessageEvent(
-                                                        MessageActionReact(
-                                                          chosenReactionId:
-                                                              reaction.key,
-                                                          currentUserId: message
-                                                              .currentUserId
-                                                              .toString(),
-                                                          messageReactId: message
-                                                                  .qbMessage
-                                                                  .properties![
-                                                              "messageReactId"]!,
-                                                          reacts: (message
-                                                                  as ReactionMessage)
-                                                              .reacts,
+                                        if (message.qbMessage.body != null)
+                                          PopupMenuWidget(
+                                            height: 20,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                for (var reaction
+                                                    in REACTION_ID_MAP.entries)
+                                                  _reactWidget(
+                                                    reaction.value,
+                                                    () {
+                                                      bloc?.events?.add(
+                                                        ReactMessageEvent(
+                                                          MessageActionReact(
+                                                            chosenReactionId:
+                                                                reaction.key,
+                                                            currentUserId: message
+                                                                .currentUserId
+                                                                .toString(),
+                                                            messageReactId: message
+                                                                    .qbMessage
+                                                                    .properties![
+                                                                "messageReactId"]!,
+                                                            reacts: (message
+                                                                    as ReactionMessage)
+                                                                .reacts,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    );
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                            ],
+                                                      );
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                  ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
                                         const PopupMenuItem(
                                           value: FORWARD_MESSAGE_MENU_ITEM,
                                           child: Text(
@@ -525,10 +566,24 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                     },
                   ),
                 ),
+                SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.sticky_note_2_rounded,
+                      color: Colors.blue,
+                    ),
+                    onPressed: () {
+                      stipop.show();
+                    },
+                  ),
+                ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.only(top: 2, bottom: 2),
                     child: TextField(
+                      onTap: () => stipop.hide(),
                       controller: _inputController,
                       onChanged: (text) {
                         TypingStatusManager.typing(

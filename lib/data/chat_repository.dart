@@ -4,6 +4,7 @@ import 'dart:core';
 import 'package:quickblox_polls_feature/data/repository_exception.dart';
 import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_action.dart';
+import 'package:quickblox_polls_feature/models/sticker_message_properties.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/models/qb_custom_object.dart';
 import 'package:quickblox_sdk/models/qb_dialog.dart';
@@ -203,6 +204,23 @@ class ChatRepository {
         "action": "messageActionReact",
         "messageReactId": data.messageReactId
       },
+    );
+  }
+
+  Future<void> sendStickerMessage(
+    String? dialogId, {
+    required StickerMessageProperties data,
+  }) async {
+    if (dialogId == null) {
+      throw RepositoryException(_parameterIsNullException,
+          affectedParams: ["dialogId"]);
+    }
+
+    await QB.chat.sendMessage(
+      dialogId,
+      saveToHistory: true,
+      markable: true,
+      properties: data.toJson(),
     );
   }
 

@@ -12,9 +12,13 @@ PODS:
     - QuickBlox (>= 2.7)
   - quickblox_sdk (0.0.1-alpha):
     - Flutter
-    - QuickBlox (~> 2.17)
+    - QuickBlox (~> 2.18)
     - Quickblox-WebRTC (~> 2.7)
   - Reachability (3.2)
+  - Stipop (0.3.0)
+  - stipop_sdk (0.2.2):
+    - Flutter
+    - Stipop (= 0.3.0)
 
 DEPENDENCIES:
   - connectivity (from `.symlinks/plugins/connectivity/ios`)
@@ -22,12 +26,14 @@ DEPENDENCIES:
   - package_info (from `.symlinks/plugins/package_info/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
   - quickblox_sdk (from `.symlinks/plugins/quickblox_sdk/ios`)
+  - stipop_sdk (from `.symlinks/plugins/stipop_sdk/ios`)
 
 SPEC REPOS:
   trunk:
     - QuickBlox
     - Quickblox-WebRTC
     - Reachability
+    - Stipop
 
 EXTERNAL SOURCES:
   connectivity:
@@ -40,6 +46,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_ios/ios"
   quickblox_sdk:
     :path: ".symlinks/plugins/quickblox_sdk/ios"
+  stipop_sdk:
+    :path: ".symlinks/plugins/stipop_sdk/ios"
 
 SPEC CHECKSUMS:
   connectivity: c4130b2985d4ef6fd26f9702e886bd5260681467
@@ -48,8 +56,10 @@ SPEC CHECKSUMS:
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
   QuickBlox: 579356f4ed04a74f345614cf00f002c2db303103
   Quickblox-WebRTC: 10bb490c8f5ffe730a00b62549f059b386e99d8c
-  quickblox_sdk: 63906f39cbc884f85cd3d6d214302c89d447f005
+  quickblox_sdk: 80a33c478eed4633138e96fad0a9e0d7d5ea1c9d
   Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
+  Stipop: 52fbf336c3a89d13a28d0dd2b756ecab1579bd7f
+  stipop_sdk: 91513bfbfbd0075e0ed267f374ab4394c584539e
 
 PODFILE CHECKSUM: 3cd0cd80c9342e7a62d7e09bc7b72b18bd372f5f
 

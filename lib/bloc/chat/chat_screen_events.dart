@@ -1,5 +1,6 @@
 import 'package:quickblox_polls_feature/models/message_action_react.dart';
 import 'package:quickblox_polls_feature/models/poll_action.dart';
+import 'package:quickblox_polls_feature/models/sticker_message_properties.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 
 /// Created by Injoit in 2021.
@@ -44,6 +45,12 @@ class CreatePollMessageEvent extends ChatScreenEvents {
 class VoteToPollEvent extends ChatScreenEvents {
   final PollActionVote data;
   VoteToPollEvent(this.data);
+}
+
+class SendStickerMessageEvent extends ChatScreenEvents {
+  final StickerMessageProperties stickerMessageProperties;
+
+  SendStickerMessageEvent(this.stickerMessageProperties);
 }
 
 class MarkMessageRead extends ChatScreenEvents {

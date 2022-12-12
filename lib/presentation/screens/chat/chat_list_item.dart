@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:quickblox_polls_feature/models/sticker_message.dart';
 import 'package:quickblox_polls_feature/presentation/screens/chat/avatar_noname.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 
@@ -88,7 +89,9 @@ class ChatListItemState extends State<ChatListItem> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: _buildNameTimeHeader(),
                       ),
-                      _buildMessageBody()
+                      _message is StickerMessage
+                          ? _buildStickerBody()
+                          : _buildMessageBody()
                     ],
                   ),
                 ),
@@ -204,5 +207,24 @@ class ChatListItemState extends State<ChatListItem> {
     completedTime = timeFormat.format(messageTime);
 
     return completedTime;
+  }
+
+  Widget _buildStickerBody() {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 234),
+      padding: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 13,
+        bottom: 13,
+      ),
+      child: Image.network(
+        (_message as StickerMessage).stickerImgUrl,
+        height: 100,
+        width: 100,
+        // cacheHeight: 100,
+        // cacheWidth: 100,
+      ),
+    );
   }
 }

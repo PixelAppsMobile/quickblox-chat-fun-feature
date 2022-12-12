@@ -48,6 +48,10 @@ dependencies:
   connectivity: ^3.0.6
   uuid: ^3.0.7
   flutter_dotenv: ^5.0.2
+  stipop_sdk:
+    git: 
+      url: https://github.com/stipop-development/stipop-flutter-sdk.git
+      ref: develop
 
 dev_dependencies:
   flutter_test:
