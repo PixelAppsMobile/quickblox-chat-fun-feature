@@ -686,6 +686,10 @@ class ChatScreenBloc
 
   Future<List<QBMessageWrapper>> _wrapMessages(
       List<QBMessage?> messages) async {
+    List<String> pollMessageCustomObjectIds = [];
+    List<QBMessage> pollMessages = [];
+    List<QBMessage> reactionMessages = [];
+    List<String> reactionMessageCustomObjectIds = [];
     List<QBMessageWrapper> wrappedMessages = [];
     for (QBMessage? message in messages) {
       if (message == null) {
@@ -718,12 +722,8 @@ class ChatScreenBloc
 
         //Displayed Messages
       } else if (message.properties?['action'] == 'pollActionCreate') {
-        final pollObject = await _chatRepository.getCustomObject(
-            ids: [message.properties!['pollID']!], className: "Poll");
-        final poll = PollMessage.fromCustomObject(
-            senderName, message, _localUserId!, pollObject!.first!);
-
-        wrappedMessages.add(poll);
+        pollMessages.add(message);
+        pollMessageCustomObjectIds.add(message.properties!['pollID']!);
       } else if (message.properties?['action'] == 'messageActionReact') {
         final id = message.properties!['messageReactId']!;
         try {
@@ -747,24 +747,9 @@ class ChatScreenBloc
               .add(QBMessageWrapper(senderName, message, _localUserId!));
         }
       } else if (message.properties?['messageReactId'] != null) {
-        final id = message.properties!['messageReactId']!;
-        try {
-          final reactObject = await _chatRepository
-              .getCustomObject(ids: [id], className: 'Reaction');
-          if (reactObject != null) {
-            wrappedMessages.add(
-              ReactionMessage.fromCustomObject(
-                senderName,
-                message,
-                _localUserId!,
-                reactObject.first!,
-              ),
-            );
-          }
-        } catch (e) {
-          wrappedMessages
-              .add(QBMessageWrapper(senderName, message, _localUserId!));
-        }
+        reactionMessageCustomObjectIds
+            .add(message.properties!['messageReactId']!);
+        reactionMessages.add(message);
       } else if (message.properties?['action'] == 'messageActionSticker') {
         wrappedMessages.add(
           StickerMessage.fromMessage(senderName, message, _localUserId!),
@@ -774,6 +759,62 @@ class ChatScreenBloc
             .add(QBMessageWrapper(senderName, message, _localUserId!));
       }
     }
+    //POLLS
+    if (pollMessageCustomObjectIds.isNotEmpty) {
+      final pollObjects = await _chatRepository.getCustomObject(
+              ids: pollMessageCustomObjectIds, className: 'Poll') ??
+          [];
+      for (var element in pollObjects) {
+        final message = messages.firstWhere(
+            (message) => message?.properties!['pollID'] == element?.id,
+            orElse: () => null);
+        if (message != null) {
+          QBUser? sender = _getParticipantById(message.senderId);
+          if (sender == null && message.senderId != null) {
+            List<QBUser?> users =
+                await _usersRepository.getUsersByIds([message.senderId!]);
+            if (users.isNotEmpty) {
+              sender = users[0];
+              _saveParticipants(users);
+            }
+          }
+          String senderName =
+              sender?.fullName ?? sender?.login ?? "DELETED User";
+          final pollMessage = PollMessage.fromCustomObject(
+              senderName, message, _localUserId!, element!);
+          wrappedMessages.add(pollMessage);
+        }
+      }
+    }
+
+    //REACTIONS
+    if (reactionMessageCustomObjectIds.isNotEmpty) {
+      final reactionObjects = await _chatRepository.getCustomObject(
+              ids: reactionMessageCustomObjectIds, className: 'Reaction') ??
+          [];
+      for (var element in reactionObjects) {
+        final message = messages.firstWhere(
+            (message) => message?.properties!['messageReactId'] == element?.id,
+            orElse: () => null);
+        if (message != null) {
+          QBUser? sender = _getParticipantById(message.senderId);
+          if (sender == null && message.senderId != null) {
+            List<QBUser?> users =
+                await _usersRepository.getUsersByIds([message.senderId!]);
+            if (users.isNotEmpty) {
+              sender = users[0];
+              _saveParticipants(users);
+            }
+          }
+          String senderName =
+              sender?.fullName ?? sender?.login ?? "DELETED User";
+          final reactionMessage = ReactionMessage.fromCustomObject(
+              senderName, message, _localUserId!, element!);
+          wrappedMessages.add(reactionMessage);
+        }
+      }
+    }
+
     return wrappedMessages;
   }
 

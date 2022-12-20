@@ -31,7 +31,7 @@ import '../base_screen_state.dart';
 import 'chat_list_item.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String _dialogId = '6388bbc932eaaf00257d4574';
+  final String _dialogId = '639959da07a49d006c0fc6c5';
   final bool _isNewChat = false;
 
   const ChatScreen({super.key});
@@ -199,6 +199,7 @@ class ChatScreenState extends BaseScreenState<ChatScreenBloc> {
                                 return GestureDetector(
                                     child: message is ReactionMessage
                                         ? Stack(
+                                            fit: StackFit.loose,
                                             children: [
                                               ChatListItem(
                                                 Key(

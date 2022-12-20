@@ -34,66 +34,61 @@ class ChatPollItem extends StatelessWidget {
                   : null),
           Padding(padding: EdgeInsets.only(left: dialogType == 3 ? 0 : 16)),
           Expanded(
-              child: Padding(
-            padding: const EdgeInsets.only(top: 15),
-            child: Column(
-              crossAxisAlignment: message.isIncoming
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.end,
-              children: <Widget>[
-                IntrinsicWidth(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Polls(
-                        onVote: (pollOption, optionIndex) {
-                          if (!hasVoted) {
-                            Provider.of<ChatScreenBloc>(context, listen: false)
-                                .events
-                                ?.add(
-                                  VoteToPollEvent(
-                                    PollActionVote(
-                                      pollID: message.pollID,
-                                      votes: message.votes,
-                                      currentUserID:
-                                          message.currentUserId.toString(),
-                                      choosenOptionID: pollOption.optionId!,
-                                    ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 15),
+              child: Column(
+                crossAxisAlignment: message.isIncoming
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.end,
+                children: <Widget>[
+                  IntrinsicWidth(
+                    child: Polls(
+                      onVote: (pollOption, optionIndex) {
+                        if (!hasVoted) {
+                          Provider.of<ChatScreenBloc>(context, listen: false)
+                              .events
+                              ?.add(
+                                VoteToPollEvent(
+                                  PollActionVote(
+                                    pollID: message.pollID,
+                                    votes: message.votes,
+                                    currentUserID:
+                                        message.currentUserId.toString(),
+                                    choosenOptionID: pollOption.optionId!,
                                   ),
-                                );
-                          }
-                        },
-                        pollStyle: TextStyle(
-                          overflow: TextOverflow.ellipsis,
-                          fontSize: 15,
-                          color: message.isIncoming
-                              ? Colors.black87
-                              : Colors.white,
-                        ),
-                        backgroundColor:
-                            message.isIncoming ? Colors.white : Colors.blue,
-                        outlineColor: Colors.transparent,
-                        hasVoted: hasVoted,
-                        children: message.options.entries
-                            .map((option) => PollOption(
-                                optionId: option.key, //OptionID
-                                option: option.value, //Option Value (Text)
-                                value: message.votes.values
-                                    .where((choosenOptionID) =>
-                                        choosenOptionID == option.key)
-                                    .length
-                                    .toDouble()))
-                            .toList(),
-                        pollTitle: Text(
-                          message.pollTitle,
-                        ),
+                                ),
+                              );
+                        }
+                      },
+                      pollStyle: TextStyle(
+                        overflow: TextOverflow.ellipsis,
+                        fontSize: 15,
+                        color:
+                            message.isIncoming ? Colors.black87 : Colors.white,
                       ),
-                    ],
+                      backgroundColor:
+                          message.isIncoming ? Colors.white : Colors.blue,
+                      outlineColor: Colors.transparent,
+                      hasVoted: hasVoted,
+                      children: message.options.entries
+                          .map((option) => PollOption(
+                              optionId: option.key, //OptionID
+                              option: option.value, //Option Value (Text)
+                              value: message.votes.values
+                                  .where((choosenOptionID) =>
+                                      choosenOptionID == option.key)
+                                  .length
+                                  .toDouble()))
+                          .toList(),
+                      pollTitle: Text(
+                        message.pollTitle,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ))
+          )
         ],
       ),
     );
